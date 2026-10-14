@@ -17,11 +17,21 @@ import {
 /* ---------- auth ---------- */
 
 export async function login(_: unknown, formData: FormData) {
-  const given = Buffer.from(String(formData.get("password") ?? ""));
-  const expected = Buffer.from(process.env.ADMIN_PASSWORD ?? "");
-  const ok = expected.length > 0 && given.length === expected.length && timingSafeEqual(given, expected);
+  const expectedRaw = (process.env.ADMIN_PASSWORD ?? "").trim();
+  if (!expectedRaw) {
+    console.error("ADMIN_PASSWORD is not set");
+    return { error: "Admin login is not configured" };
+  }
+  const given = Buffer.from(String(formData.get("password") ?? "").trim());
+  const expected = Buffer.from(expectedRaw);
+  const ok = given.length === expected.length && timingSafeEqual(given, expected);
   if (!ok) return { error: "Wrong password" };
-  await createSession();
+  try {
+    await createSession();
+  } catch (e) {
+    console.error("createSession failed:", e);
+    return { error: "Server misconfigured (SESSION_SECRET)" };
+  }
   redirect("/admin");
 }
 
