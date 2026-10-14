@@ -3,6 +3,7 @@
 import { ExternalLink, RotateCw, Smartphone } from "lucide-react";
 import { useState, useTransition } from "react";
 import { saveEvent } from "@/app/actions/admin";
+import { unwrap } from "@/lib/action-result";
 import {
   EN_FONTS,
   KH_FONTS,
@@ -43,11 +44,18 @@ const SECTION_LABELS: Record<(typeof SECTION_KEYS)[number], string> = {
   gift: "Gift (KHQR)",
 };
 
+// The event time is entered in Cambodia time (UTC+7, no DST), matching how the dashboard shows it.
+// Using a fixed offset rather than the browser's timezone also keeps the server render and hydration identical.
+const EVENT_TZ_OFFSET = "+07:00";
+const EVENT_TZ_OFFSET_MS = 7 * 60 * 60 * 1000;
+
 function toLocalInput(iso: string | null) {
   if (!iso) return "";
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return new Date(new Date(iso).getTime() + EVENT_TZ_OFFSET_MS).toISOString().slice(0, 16);
+}
+
+function fromLocalInput(value: string) {
+  return value ? new Date(`${value}:00${EVENT_TZ_OFFSET}`).toISOString() : null;
 }
 
 export function CustomizeEditor({ initial, agenda }: { initial: EventData; agenda: ScheduleDay[] }) {
@@ -71,7 +79,7 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
   const save = () =>
     start(async () => {
       try {
-        await saveEvent(data);
+        unwrap(await saveEvent(data));
         setDirty(false);
         setMsg("Saved ✓");
         setPreviewKey((k) => k + 1);
@@ -120,11 +128,11 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
                 <Input value={data.bride} onChange={(e) => patch({ bride: e.target.value })} />
               </Field>
             </div>
-            <Field label="Event date & time" hint="Used for the countdown. The displayed date text is edited in the Text tab.">
+            <Field label="Event date & time (Cambodia time)" hint="Used for the countdown. The displayed date text is edited in the Text tab.">
               <Input
                 type="datetime-local"
                 value={toLocalInput(data.event_date)}
-                onChange={(e) => patch({ event_date: e.target.value ? new Date(e.target.value).toISOString() : null })}
+                onChange={(e) => patch({ event_date: fromLocalInput(e.target.value) })}
               />
             </Field>
           </Card>

@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { MapPin, Music, VolumeX } from "lucide-react";
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { trackOpen } from "@/app/actions/guest";
 import type { EventData, ScheduleDay } from "@/lib/types";
@@ -29,8 +30,13 @@ type Props = {
   preview?: boolean;
 };
 
+// Only Supabase Storage is allowed in next.config images; pasted external URLs are served as-is.
+const unoptimized = (src: string) => !src.includes(".supabase.co/storage/v1/object/public/");
+
 function bg(url: string, fallback: string) {
-  return url ? { backgroundImage: `url("${url}")` } : { background: fallback };
+  // Percent-encode characters that would end the CSS string early (pasted URLs aren't sanitised).
+  const safe = url.replace(/["\\\n\r]/g, encodeURIComponent);
+  return url ? { backgroundImage: `url("${safe}")` } : { background: fallback };
 }
 
 export function Invitation({ event, agenda, guest, wishes, initialLang, preview = false }: Props) {
@@ -88,7 +94,7 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
 
   return (
     <div className="invite min-h-dvh bg-neutral-900" style={themeVars}>
-      {c.music && <audio ref={audio} src={c.music} loop preload="auto" />}
+      {c.music && <audio ref={audio} src={c.music} loop preload="none" />}
 
       <div className="relative mx-auto min-h-dvh max-w-[480px] overflow-hidden bg-white shadow-2xl">
         {/* ---------- Cover ---------- */}
@@ -245,10 +251,13 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
                 return (
                 <Reveal key={src + i} delay={(i % 2) * 0.08} className={wide ? "col-span-2" : ""}>
                   <button onClick={() => setZoom(src)} className="block w-full overflow-hidden" style={{ borderRadius: "var(--radius)" }}>
-                    <img
+                    <Image
                       src={src}
                       alt=""
-                      loading="lazy"
+                      unoptimized={unoptimized(src)}
+                      width={wide ? 960 : 480}
+                      height={wide ? 720 : 640}
+                      sizes={wide ? "(max-width: 480px) 100vw, 480px" : "(max-width: 480px) 50vw, 240px"}
                       className={`w-full object-cover transition duration-500 hover:scale-105 ${wide ? "aspect-[4/3]" : "aspect-[3/4]"}`}
                     />
                   </button>
@@ -265,7 +274,7 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
             <Reveal>
               <SectionTitle>{t.location}</SectionTitle>
               <div className="card overflow-hidden">
-                {c.mapImage && <img src={c.mapImage} alt="map" className="w-full object-cover" />}
+                {c.mapImage && <Image src={c.mapImage} alt="map" unoptimized={unoptimized(c.mapImage)} width={960} height={640} sizes="(max-width: 480px) 100vw, 480px" className="h-auto w-full object-cover" />}
                 <div className="space-y-3 p-4 text-center">
                   <p className="text-sm leading-7">{text.location}</p>
                   {c.mapUrl && (

@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_cache } from "next/cache";
 import { db } from "./supabase/server";
 import {
   eventConfigSchema,
@@ -10,7 +11,15 @@ import {
   type TimelineItem,
 } from "./types";
 
-export async function getEvent(): Promise<EventData> {
+export const EVENT_TAG = "event";
+export const WISHES_TAG = "wishes";
+
+// Event, agenda and approved wishes change rarely; cache them and bust via revalidateTag in admin actions.
+export const getEvent = unstable_cache(fetchEvent, ["event"], { tags: [EVENT_TAG] });
+export const getAgenda = unstable_cache(fetchAgenda, ["agenda"], { tags: [EVENT_TAG] });
+export const getApprovedWishes = unstable_cache(fetchApprovedWishes, ["approved-wishes"], { tags: [WISHES_TAG] });
+
+async function fetchEvent(): Promise<EventData> {
   const { data, error } = await db().from("event").select("*").eq("id", 1).maybeSingle();
   if (error) throw new Error(error.message);
   return {
@@ -24,7 +33,7 @@ export async function getEvent(): Promise<EventData> {
   };
 }
 
-export async function getAgenda(): Promise<ScheduleDay[]> {
+async function fetchAgenda(): Promise<ScheduleDay[]> {
   const [{ data: days, error: e1 }, { data: items, error: e2 }] = await Promise.all([
     db().from("schedule_day").select("*").order("sort"),
     db().from("timeline_item").select("*").order("sort"),
@@ -43,7 +52,7 @@ export async function getGuestByCode(code: string): Promise<Guest | null> {
   return data;
 }
 
-export async function getApprovedWishes(limit = 50) {
+async function fetchApprovedWishes(limit = 50) {
   const { data, error } = await db()
     .from("wish")
     .select("id, message, created_at, guest:guest_id(name)")

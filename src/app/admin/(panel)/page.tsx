@@ -1,13 +1,13 @@
 import { CheckCircle2, Eye, HelpCircle, UserCheck, Users, XCircle } from "lucide-react";
 import Link from "next/link";
 import { Badge, Card } from "@/components/admin/ui";
-import { listGuests, listWishes } from "@/lib/admin-data";
+import { listGuests, listRecentWishes } from "@/lib/admin-data";
 import { getEvent } from "@/lib/event";
 
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
-  const [guests, wishes, event] = await Promise.all([listGuests(), listWishes(), getEvent()]);
+  const [guests, wishes, event] = await Promise.all([listGuests(), listRecentWishes(6), getEvent()]);
   const opened = guests.filter((g) => g.opened_at).length;
   const yes = guests.filter((g) => g.rsvp_status === "yes");
   const no = guests.filter((g) => g.rsvp_status === "no").length;
@@ -91,7 +91,7 @@ export default async function Dashboard() {
             <p className="text-sm text-neutral-500">No wishes yet.</p>
           ) : (
             <ul className="space-y-3">
-              {wishes.slice(0, 6).map((w) => (
+              {wishes.map((w) => (
                 <li key={w.id} className="text-sm">
                   <p className="line-clamp-2">{w.message}</p>
                   <p className="text-xs text-neutral-500">— {w.guest?.name}</p>

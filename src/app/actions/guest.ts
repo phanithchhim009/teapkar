@@ -1,18 +1,24 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/supabase/server";
-import { getGuestByCode } from "@/lib/event";
+import { getGuestByCode, WISHES_TAG } from "@/lib/event";
 
+// Also enforced by the wish_limit trigger (supabase/migrations/0002_hardening.sql); keep the two in sync.
 const MAX_WISHES_PER_GUEST = 5;
 
+const codeSchema = z.string().min(1).max(32);
+
 export async function trackOpen(code: string) {
-  await db().rpc("track_guest_open", { p_code: code });
+  const parsed = codeSchema.safeParse(code);
+  if (!parsed.success) return;
+  const { error } = await db().rpc("track_guest_open", { p_code: parsed.data });
+  if (error) console.error("track_guest_open failed:", error.message);
 }
 
 const rsvpSchema = z.object({
-  code: z.string().min(1).max(32),
+  code: codeSchema,
   status: z.enum(["yes", "no"]),
   count: z.coerce.number().int().min(0).max(20),
 });
@@ -34,7 +40,7 @@ export async function submitRsvp(input: z.input<typeof rsvpSchema>) {
 }
 
 const wishSchema = z.object({
-  code: z.string().min(1).max(32),
+  code: codeSchema,
   message: z.string().trim().min(1).max(500),
 });
 
@@ -52,7 +58,10 @@ export async function submitWish(input: z.input<typeof wishSchema>) {
     .insert({ guest_id: guest.id, message: parsed.data.message })
     .select("id, message, created_at")
     .single();
+  // The cheap count above handles the normal case; the trigger catches concurrent submissions.
+  if (error?.message === "wish_limit") return { ok: false as const, error: "limit" };
   if (error) return { ok: false as const, error: "failed" };
+  revalidateTag(WISHES_TAG);
   revalidatePath(`/i/${guest.code}`);
   return { ok: true as const, wish: { ...data, name: guest.name } };
 }

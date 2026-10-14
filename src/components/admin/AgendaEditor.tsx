@@ -3,6 +3,7 @@
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { saveAgenda } from "@/app/actions/admin";
+import { unwrap } from "@/lib/action-result";
 import type { ScheduleDay } from "@/lib/types";
 import { Button, Card, Input } from "./ui";
 
@@ -101,7 +102,7 @@ export function AgendaEditor({ initial, onSaved }: { initial: ScheduleDay[]; onS
             onClick={() =>
               start(async () => {
                 try {
-                  await saveAgenda(days.map((d) => ({ title: d.title, date: d.date || null, items: d.items.map((i) => ({ ...i, id: "", day_id: "", sort: 0 })) })));
+                  unwrap(await saveAgenda(days.map((d) => ({ title: d.title, date: d.date || null, items: d.items.map(({ time, name }) => ({ time, name })) }))));
                   setDirty(false);
                   setMsg("Saved ✓");
                   onSaved();

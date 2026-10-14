@@ -12,6 +12,7 @@ import {
   updateGuest,
   type GuestInput,
 } from "@/app/actions/admin";
+import { unwrap } from "@/lib/action-result";
 import { parseCsv, toCsv } from "@/lib/csv";
 import type { Guest } from "@/lib/types";
 import { Badge, Button, Card, Field, Input, Modal, Select, Textarea } from "./ui";
@@ -72,14 +73,16 @@ export function GuestManager({ guests, siteUrl }: { guests: Guest[]; siteUrl: st
     a.href = URL.createObjectURL(blob);
     a.download = `guests-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
-    URL.revokeObjectURL(a.href);
+    // Revoking synchronously can cancel the download in Safari/Firefox.
+    setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
   };
 
   const removeSelected = () => {
     if (!selected.size || !confirm(`Delete ${selected.size} guest(s)? Their RSVPs and wishes will be deleted too.`)) return;
     start(async () => {
-      await deleteGuests([...selected]);
-      setSelected(new Set());
+      const res = await deleteGuests([...selected]);
+      if (res.ok) setSelected(new Set());
+      else alert(res.error);
     });
   };
 
@@ -261,10 +264,10 @@ function GuestForm({ guest, groups, onClose }: { guest: Guest | null; groups: st
   const set = (k: keyof GuestInput) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value });
 
-  const run = (fn: () => Promise<unknown>, close = true) =>
+  const run = (fn: () => ReturnType<typeof createGuest>, close = true) =>
     start(async () => {
       try {
-        await fn();
+        unwrap(await fn());
         if (close) onClose();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed");
@@ -406,7 +409,7 @@ function BulkImport({ onClose }: { onClose: () => void }) {
               onClick={() =>
                 start(async () => {
                   try {
-                    await bulkCreateGuests(rows);
+                    unwrap(await bulkCreateGuests(rows));
                     onClose();
                   } catch (e) {
                     setError(e instanceof Error ? e.message : "Failed");

@@ -34,15 +34,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function InvitePage({ params, searchParams }: Props) {
   const { code } = await params;
   const { lang } = await searchParams;
-  const guest = await loadGuest(code);
+  // Fetch everything at once rather than waiting on the guest lookup first.
+  const [guest, event, agenda, wishes] = await Promise.all([loadGuest(code), loadEvent(), getAgenda(), getApprovedWishes()]);
   if (!guest) notFound();
-
-  const [event, agenda, wishes] = await Promise.all([loadEvent(), getAgenda(), getApprovedWishes()]);
   const initialLang = lang === "en" || lang === "kh" ? lang : guest.lang;
 
   return (
     <>
       <FontLinks config={event.config} />
+      {/* The cover is a CSS background, so the browser wouldn't discover it until styles apply. */}
+      {event.config.coverBackground && <link rel="preload" as="image" href={event.config.coverBackground} />}
       <Invitation
         event={event}
         agenda={agenda}

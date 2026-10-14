@@ -2,7 +2,9 @@ import { SignJWT, jwtVerify } from "jose";
 
 // Edge-safe helpers (used by middleware and server code).
 export const SESSION_COOKIE = "teabkar_admin";
-const MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+// Sessions are stateless JWTs and can't be revoked individually (rotate SESSION_SECRET to sign
+// everyone out), so keep them fairly short.
+const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 function secret() {
   const s = process.env.SESSION_SECRET;

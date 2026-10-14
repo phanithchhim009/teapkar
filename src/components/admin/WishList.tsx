@@ -1,18 +1,27 @@
 "use client";
 
 import { Eye, EyeOff, Trash2 } from "lucide-react";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { deleteWish, setWishApproved } from "@/app/actions/admin";
+import type { ActionResult } from "@/lib/action-result";
 import type { Wish } from "@/lib/types";
 import { Badge, Button, Card } from "./ui";
 
 export function WishList({ wishes }: { wishes: Wish[] }) {
   const [pending, start] = useTransition();
+  const [error, setError] = useState("");
+  const run = (action: () => Promise<ActionResult>) =>
+    start(async () => {
+      setError("");
+      const res = await action();
+      if (!res.ok) setError(res.error);
+    });
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">
         Wishes <span className="text-base font-normal text-neutral-400">({wishes.length})</span>
       </h1>
+      {error && <p className="text-sm text-red-600">{error}</p>}
       {wishes.length === 0 && <Card className="text-center text-sm text-neutral-500">No wishes yet.</Card>}
       <div className="grid gap-3 md:grid-cols-2">
         {wishes.map((w) => (
@@ -32,7 +41,7 @@ export function WishList({ wishes }: { wishes: Wish[] }) {
                   size="sm"
                   variant="ghost"
                   disabled={pending}
-                  onClick={() => start(() => setWishApproved(w.id, !w.approved))}
+                  onClick={() => run(() => setWishApproved(w.id, !w.approved))}
                   title={w.approved ? "Hide from invitation" : "Show on invitation"}
                 >
                   {w.approved ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -42,7 +51,7 @@ export function WishList({ wishes }: { wishes: Wish[] }) {
                   variant="ghost"
                   className="text-red-600"
                   disabled={pending}
-                  onClick={() => confirm("Delete this wish?") && start(() => deleteWish(w.id))}
+                  onClick={() => confirm("Delete this wish?") && run(() => deleteWish(w.id))}
                   title="Delete"
                 >
                   <Trash2 size={14} />

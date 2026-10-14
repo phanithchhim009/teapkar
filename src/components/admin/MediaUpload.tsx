@@ -2,12 +2,22 @@
 
 import { ImagePlus, Loader2, Music, X } from "lucide-react";
 import { useRef, useState } from "react";
-import { uploadMedia } from "@/app/actions/admin";
+import { createUpload } from "@/app/actions/admin";
+import { unwrap } from "@/lib/action-result";
 
+/** Uploads straight to Supabase Storage via a signed URL; returns the file's public URL. */
 export async function uploadFile(file: File) {
-  const fd = new FormData();
-  fd.append("file", file);
-  return uploadMedia(fd);
+  const { uploadUrl, publicUrl } = unwrap(await createUpload({ name: file.name, type: file.type, size: file.size }));
+  const res = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "content-type": file.type, "cache-control": "max-age=31536000", "x-upsert": "false" },
+    body: file,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message ?? `Upload failed (${res.status})`);
+  }
+  return publicUrl;
 }
 
 export function MediaUpload({
@@ -138,13 +148,15 @@ export function GalleryEditor({ value, onChange }: { value: string[]; onChange: 
           if (!files.length) return;
           setBusy(files.length);
           setError("");
+          // Keep whatever finished uploading even if a later file fails.
+          const urls: string[] = [];
           try {
-            const urls: string[] = [];
             for (const f of files) urls.push(await uploadFile(f));
-            onChange([...value, ...urls]);
           } catch (err) {
-            setError(err instanceof Error ? err.message : "Upload failed");
+            const failed = files[urls.length]?.name;
+            setError(`${failed ? `${failed}: ` : ""}${err instanceof Error ? err.message : "Upload failed"}`);
           } finally {
+            if (urls.length) onChange([...value, ...urls]);
             setBusy(0);
           }
         }}
