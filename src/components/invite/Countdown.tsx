@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Labels } from "./i18n";
+import type { Labels, Lang } from "./i18n";
+import { RollingDigits } from "./RollingDigits";
 
 export function diff(target: number) {
   const ms = Math.max(0, target - Date.now());
@@ -14,7 +15,7 @@ export function diff(target: number) {
   };
 }
 
-export function Countdown({ date, t }: { date: string; t: Labels }) {
+export function Countdown({ date, t, lang }: { date: string; t: Labels; lang: Lang }) {
   const target = new Date(date).getTime();
   const [left, setLeft] = useState<ReturnType<typeof diff> | null>(null);
 
@@ -35,14 +36,22 @@ export function Countdown({ date, t }: { date: string; t: Labels }) {
   ];
   return (
     <div className="grid grid-cols-4 gap-2">
-      {cells.map(([n, label]) => (
-        <div key={label} className="card count-cell py-3 text-center">
-          <div className="text-2xl font-semibold tabular-nums" style={{ color: "var(--primary)" }}>
-            {String(n).padStart(2, "0")}
+      {cells.map(([n, label]) => {
+        const text = String(n).padStart(2, "0");
+        return (
+          <div key={label} className="card count-cell py-3 text-center">
+            <div className="text-2xl font-semibold tabular-nums leading-tight" style={{ color: "var(--primary)" }} aria-hidden>
+              <RollingDigits text={text} lang={lang} />
+            </div>
+            <span className="sr-only">
+              {text} {label}
+            </span>
+            <div className="mt-1 text-xs" aria-hidden>
+              {label}
+            </div>
           </div>
-          <div className="mt-1 text-xs">{label}</div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -251,7 +251,7 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
             {band}
             <Reveal>
               <SectionTitle angkor={angkor}>{t.countdown}</SectionTitle>
-              <Countdown date={event.event_date} t={t} />
+              <Countdown date={event.event_date} t={t} lang={lang} />
             </Reveal>
           </section>
         )}

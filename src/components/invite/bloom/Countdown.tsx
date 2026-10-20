@@ -1,35 +1,11 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { diff } from "../Countdown";
-import { khDigits } from "./date";
+import { RollingDigits } from "../RollingDigits";
 import { STAGGER } from "./animations/variants";
 import { Tx, useBloom } from "./BloomContext";
 import { Reveal } from "./Reveal";
-
-/** One digit that slides up out of its slot when it changes. */
-function Digit({ value }: { value: string }) {
-  return (
-    // An invisible copy sizes the slot to the glyph (Khmer digits are wider/taller than Latin ones);
-    // only the vertical axis is clipped, for the slide.
-    <span className="relative inline-block overflow-x-visible overflow-y-clip align-top leading-[1.7]">
-      <span className="invisible">{value}</span>
-      <AnimatePresence initial={false} mode="popLayout">
-        <motion.span
-          key={value}
-          className="absolute inset-0 text-center"
-          initial={{ y: "100%", opacity: 0 }}
-          animate={{ y: "0%", opacity: 1 }}
-          exit={{ y: "-100%", opacity: 0 }}
-          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {value}
-        </motion.span>
-      </AnimatePresence>
-    </span>
-  );
-}
 
 export function BloomCountdown({ date }: { date: string }) {
   const { t, lang } = useBloom();
@@ -54,13 +30,10 @@ export function BloomCountdown({ date }: { date: string }) {
     <div className="grid grid-cols-4 gap-2.5">
       {cells.map(([n, label], i) => {
         const text = n === undefined ? "--" : String(n).padStart(2, "0");
-        const shown = lang === "kh" ? khDigits(text) : text;
         return (
           <Reveal key={i} variant="popIn" delay={i * STAGGER} className="bloom-glass-green rounded-2xl py-3 text-center text-white">
-            <div className="text-2xl font-semibold tabular-nums" aria-hidden>
-              {Array.from(shown).map((ch, j) => (
-                <Digit key={j} value={ch} />
-              ))}
+            <div className="text-2xl font-semibold tabular-nums leading-tight" aria-hidden>
+              <RollingDigits text={text} lang={lang} />
             </div>
             <span className="sr-only">
               {text} {label}
