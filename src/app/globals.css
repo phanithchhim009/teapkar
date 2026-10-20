@@ -56,3 +56,118 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .petal { animation: none; display: none; }
 }
+
+/* ---------- "angkor" theme: carved sandstone, gilding, kbach ornament ---------- */
+.theme-angkor {
+  --sandstone: #f4ead6;
+  --sandstone-deep: #e6d3ad;
+  --ak-corner-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform=''%3E%3Cpath d='M1.5 38V13Q1.5 1.5 13 1.5H38' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M6 34C6 17 17 6 34 6' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M10 27c0-10 7-17 17-17-5 2-7 6-4 8 2.4 1.4 4.4-1 3-2.8' fill='none' stroke='%23000' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M6 6c6.5.4 10 3.6 10 9.6C9.6 15.6 6.4 12.4 6 6Z'/%3E%3Ccircle cx='20' cy='20' r='1.3'/%3E%3C/g%3E%3C/svg%3E");
+  --ak-corner-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform='translate(40 0) scale(-1 1)'%3E%3Cpath d='M1.5 38V13Q1.5 1.5 13 1.5H38' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M6 34C6 17 17 6 34 6' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M10 27c0-10 7-17 17-17-5 2-7 6-4 8 2.4 1.4 4.4-1 3-2.8' fill='none' stroke='%23000' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M6 6c6.5.4 10 3.6 10 9.6C9.6 15.6 6.4 12.4 6 6Z'/%3E%3Ccircle cx='20' cy='20' r='1.3'/%3E%3C/g%3E%3C/svg%3E");
+  --ak-corner-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform='translate(0 40) scale(1 -1)'%3E%3Cpath d='M1.5 38V13Q1.5 1.5 13 1.5H38' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M6 34C6 17 17 6 34 6' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M10 27c0-10 7-17 17-17-5 2-7 6-4 8 2.4 1.4 4.4-1 3-2.8' fill='none' stroke='%23000' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M6 6c6.5.4 10 3.6 10 9.6C9.6 15.6 6.4 12.4 6 6Z'/%3E%3Ccircle cx='20' cy='20' r='1.3'/%3E%3C/g%3E%3C/svg%3E");
+  --ak-corner-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform='translate(40 40) scale(-1 -1)'%3E%3Cpath d='M1.5 38V13Q1.5 1.5 13 1.5H38' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M6 34C6 17 17 6 34 6' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M10 27c0-10 7-17 17-17-5 2-7 6-4 8 2.4 1.4 4.4-1 3-2.8' fill='none' stroke='%23000' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M6 6c6.5.4 10 3.6 10 9.6C9.6 15.6 6.4 12.4 6 6Z'/%3E%3Ccircle cx='20' cy='20' r='1.3'/%3E%3C/g%3E%3C/svg%3E");
+  --ak-frieze: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 16'%3E%3Cpath d='M0 .5h20M0 15.5h20' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M10 2.6c4.4 3.4 6 7.4 5.4 10.4H4.6C4 10 5.6 6 10 2.6Z'/%3E%3Ccircle cx='0' cy='11' r='1.2'/%3E%3Ccircle cx='20' cy='11' r='1.2'/%3E%3C/svg%3E");
+  --ak-rosette: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cg transform='translate(28 28)'%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(0)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(45)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(90)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(135)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(180)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(225)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(270)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(315)'/%3E%3Ccircle r='3.4'/%3E%3C/g%3E%3Cpath d='M0 0l4 4-4 4-4-4zM56 0l4 4-4 4-4-4zM0 56l4-4 4 4-4 4zM56 56l4-4-4-4-4 4z' transform='translate(0 -4)'/%3E%3Cpath d='M28 0v4M28 52v4M0 28h4M52 28h4' stroke='%23000'/%3E%3C/svg%3E");
+}
+.theme-angkor .temple-section {
+  position: relative;
+  isolation: isolate;
+}
+/* Sandstone grain + Ta Prohm-style floral medallions, very faint. */
+.theme-angkor .temple-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--primary);
+  opacity: 0.07;
+  -webkit-mask: var(--ak-rosette) center top / 56px 56px repeat;
+  mask: var(--ak-rosette) center top / 56px 56px repeat;
+}
+.theme-angkor .temple-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .3 0 0 0 0 .16 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.18;
+  mix-blend-mode: multiply;
+}
+
+/* Lotus-petal frieze (kbach trabak chuk) between sections, like the band under a lintel. */
+.theme-angkor .frieze {
+  height: 16px;
+  background-color: var(--primary);
+  -webkit-mask: var(--ak-frieze) left center / 20px 16px repeat-x;
+  mask: var(--ak-frieze) left center / 20px 16px repeat-x;
+  opacity: 0.85;
+}
+
+/* Cards: sandstone panel with a gilded double moulding and kbach scroll corners. */
+.theme-angkor .card {
+  position: relative;
+  background: color-mix(in srgb, var(--sandstone) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 70%, transparent);
+  box-shadow:
+    inset 0 0 0 3px color-mix(in srgb, var(--sandstone) 90%, transparent),
+    inset 0 0 0 4px color-mix(in srgb, var(--primary) 40%, transparent),
+    0 6px 18px -10px rgb(74 44 23 / 0.45);
+}
+.theme-angkor .card::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  pointer-events: none;
+  background-color: var(--primary);
+  --c: 22px;
+  -webkit-mask:
+    var(--ak-corner-tl) left top / var(--c) var(--c) no-repeat,
+    var(--ak-corner-tr) right top / var(--c) var(--c) no-repeat,
+    var(--ak-corner-bl) left bottom / var(--c) var(--c) no-repeat,
+    var(--ak-corner-br) right bottom / var(--c) var(--c) no-repeat;
+  mask:
+    var(--ak-corner-tl) left top / var(--c) var(--c) no-repeat,
+    var(--ak-corner-tr) right top / var(--c) var(--c) no-repeat,
+    var(--ak-corner-bl) left bottom / var(--c) var(--c) no-repeat,
+    var(--ak-corner-br) right bottom / var(--c) var(--c) no-repeat;
+}
+.theme-angkor .card.compact::before { --c: 14px; inset: 3px; }
+/* Nothing may sit on top of a QR code. */
+.theme-angkor .card.plain::before { display: none; }
+
+/* Countdown cells shaped like temple doorways. */
+.theme-angkor .count-cell {
+  border-radius: 999px 999px var(--radius) var(--radius);
+  padding-top: 1.1rem;
+}
+.theme-angkor .count-cell::before { display: none; }
+
+/* Gilded buttons. */
+.theme-angkor .btn-primary {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--primary) 70%, #fff) 0%,
+    var(--primary) 50%,
+    color-mix(in srgb, var(--primary) 80%, #000) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--primary) 70%, #000);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 4px 12px -4px rgb(74 44 23 / 0.5);
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.25);
+}
+
+/* Gallery photos in a thin gilded frame. */
+.theme-angkor .photo {
+  box-shadow: 0 0 0 1px var(--primary), 0 0 0 4px var(--sandstone), 0 0 0 5px color-mix(in srgb, var(--primary) 60%, transparent);
+}
+
+.theme-angkor .petal { border-radius: 50% 0 50% 0; }
+
+@keyframes sun-glow {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+.theme-angkor .sun { animation: sun-glow 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .theme-angkor .sun { animation: none; }
+}

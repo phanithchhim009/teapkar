@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { KbachDivider } from "./angkor/Ornaments";
 
 export function Reveal({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   return (
@@ -16,7 +17,7 @@ export function Reveal({ children, className, delay = 0 }: { children: React.Rea
   );
 }
 
-export function SectionTitle({ children }: { children: React.ReactNode }) {
+export function SectionTitle({ children, angkor = false }: { children: React.ReactNode; angkor?: boolean }) {
   // Script fonts are unreadable in ALL CAPS, so fall back to the heading font.
   const caps = typeof children === "string" && /[A-Z]/.test(children) && children === children.toUpperCase();
   return (
@@ -24,7 +25,11 @@ export function SectionTitle({ children }: { children: React.ReactNode }) {
       <h2 className={`${caps ? "font-heading tracking-widest" : "font-title"} text-xl leading-relaxed`} style={{ color: "var(--primary)" }}>
         {children}
       </h2>
-      <div className="divider mx-auto mt-3 w-40" />
+      {angkor ? (
+        <KbachDivider className="mx-auto mt-2 h-7 w-56" style={{ color: "var(--primary)" }} />
+      ) : (
+        <div className="divider mx-auto mt-3 w-40" />
+      )}
     </div>
   );
 }

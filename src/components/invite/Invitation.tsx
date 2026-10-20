@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { trackOpen } from "@/app/actions/guest";
 import type { EventData, ScheduleDay } from "@/lib/types";
+import { AngkorSkyline, Lotus, LotusBud, NagaArch } from "./angkor/Ornaments";
 import { Countdown } from "./Countdown";
 import { labels, type Lang } from "./i18n";
 import { Lightbox } from "./Lightbox";
@@ -90,10 +91,18 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
     }
   };
 
-  const gradient = `linear-gradient(160deg, #fffaf2, color-mix(in srgb, ${c.primaryColor} 25%, #fff))`;
+  const angkor = c.theme === "angkor";
+  const gradient = angkor
+    ? `linear-gradient(180deg, #f8f1e3, #efe1c3)`
+    : `linear-gradient(160deg, #fffaf2, color-mix(in srgb, ${c.primaryColor} 25%, #fff))`;
+  // Dawn over the moat at Angkor Wat.
+  const sunrise = "linear-gradient(180deg, #f3d6a6 0%, #f9ead0 40%, #f4e5c8 72%, #e8d3ab 100%)";
+  // Section helpers: sandstone texture + lotus-petal frieze on top in the Angkor theme.
+  const sec = (cls: string) => (angkor ? `${cls} temple-section` : cls);
+  const band = angkor ? <div aria-hidden className="frieze absolute inset-x-0 top-0" /> : null;
 
   return (
-    <div className="invite min-h-dvh bg-neutral-900" style={themeVars}>
+    <div className={`invite min-h-dvh bg-neutral-900 ${angkor ? "theme-angkor" : ""}`} style={themeVars}>
       {c.music && <audio ref={audio} src={c.music} loop preload="none" />}
 
       <div className="relative mx-auto min-h-dvh max-w-[480px] overflow-hidden bg-white shadow-2xl">
@@ -102,23 +111,50 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
           {!opened && (
             <motion.section
               key="cover"
-              className="fixed inset-0 z-40 mx-auto flex max-w-[480px] flex-col items-center justify-between bg-cover bg-center px-6 py-16 text-center"
-              style={bg(c.coverBackground, gradient)}
+              className={`fixed inset-0 z-40 mx-auto flex max-w-[480px] flex-col items-center justify-between bg-cover bg-center px-6 text-center ${angkor ? "py-10" : "py-16"}`}
+              style={bg(c.coverBackground, angkor ? sunrise : gradient)}
               exit={{ opacity: 0, scale: 1.08, filter: "blur(6px)" }}
               transition={{ duration: 0.9, ease: "easeInOut" }}
             >
-              <div className="space-y-3">
-                <p className="font-title text-lg" style={{ color: "var(--primary)" }}>
-                  {text.main_title}
-                </p>
-                <p className="font-title text-2xl leading-loose">
-                  {event.groom}
-                  <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
-                    &amp;
-                  </span>
-                  {event.bride}
-                </p>
-              </div>
+              {angkor ? (
+                <div className="w-full">
+                  <div className="relative mx-auto w-full max-w-[300px]" style={{ color: "var(--primary)" }}>
+                    <NagaArch className="w-full" />
+                    <p className="font-title absolute inset-x-[19%] bottom-[20%] text-base leading-relaxed">{text.main_title}</p>
+                  </div>
+                  <p className="font-title mt-3 text-2xl leading-loose">
+                    {event.groom}
+                    <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
+                      &amp;
+                    </span>
+                    {event.bride}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="font-title text-lg" style={{ color: "var(--primary)" }}>
+                    {text.main_title}
+                  </p>
+                  <p className="font-title text-2xl leading-loose">
+                    {event.groom}
+                    <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
+                      &amp;
+                    </span>
+                    {event.bride}
+                  </p>
+                </div>
+              )}
+
+              {angkor && !c.coverBackground && (
+                <div className="relative w-full shrink" style={{ color: "var(--primary)" }}>
+                  <div
+                    aria-hidden
+                    className="sun absolute top-[2%] h-28 w-28 rounded-full"
+                    style={{ left: "calc(50% - 3.5rem)", background: "radial-gradient(circle, #ffe7b3 0%, #f8c77e 40%, transparent 70%)" }}
+                  />
+                  <AngkorSkyline className="relative mx-auto max-h-[30dvh] w-full" />
+                </div>
+              )}
 
               <div className="w-full space-y-4">
                 <p className="text-sm">{text.subtitle || t.dear}</p>
@@ -165,11 +201,18 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
         <Petals color={c.primaryColor} />
 
         {/* ---------- Main ---------- */}
-        <section className="relative bg-cover bg-center px-6 py-16 text-center" style={bg(c.mainBackground, gradient)}>
+        <section className={sec("relative bg-cover bg-center px-6 py-16 text-center")} style={bg(c.mainBackground, gradient)}>
           <Reveal className="space-y-5">
-            <p className="font-title text-2xl leading-loose" style={{ color: "var(--primary)" }}>
-              {text.main_title}
-            </p>
+            {angkor ? (
+              <div className="relative mx-auto w-full max-w-[300px]" style={{ color: "var(--primary)" }}>
+                <NagaArch className="w-full" />
+                <p className="font-title absolute inset-x-[19%] bottom-[20%] text-lg leading-relaxed">{text.main_title}</p>
+              </div>
+            ) : (
+              <p className="font-title text-2xl leading-loose" style={{ color: "var(--primary)" }}>
+                {text.main_title}
+              </p>
+            )}
             <p className="font-title text-xl leading-loose">
               {event.groom}
               <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
@@ -200,9 +243,10 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
 
         {/* ---------- Countdown ---------- */}
         {sections.countdown && event.event_date && (
-          <section className="px-6 py-12" style={{ background: gradient }}>
+          <section className={sec("px-6 py-12")} style={{ background: gradient }}>
+            {band}
             <Reveal>
-              <SectionTitle>{t.countdown}</SectionTitle>
+              <SectionTitle angkor={angkor}>{t.countdown}</SectionTitle>
               <Countdown date={event.event_date} t={t} />
             </Reveal>
           </section>
@@ -210,9 +254,10 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
 
         {/* ---------- Agenda ---------- */}
         {sections.agenda && agenda.length > 0 && (
-          <section className="bg-cover bg-center px-6 py-14" style={bg(c.detailsBackground, gradient)}>
+          <section className={sec("bg-cover bg-center px-6 py-14")} style={bg(c.detailsBackground, gradient)}>
+            {band}
             <Reveal>
-              <SectionTitle>{text.details_title}</SectionTitle>
+              <SectionTitle angkor={angkor}>{text.details_title}</SectionTitle>
             </Reveal>
             <div className="space-y-6">
               {agenda.map((day) => (
@@ -223,10 +268,14 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
                   <ol className="relative ml-2 space-y-4 border-l pl-5" style={{ borderColor: "var(--primary)" }}>
                     {day.items.map((it) => (
                       <li key={it.id} className="relative">
-                        <span
-                          className="absolute -left-[27px] top-1.5 h-3 w-3 rounded-full border-2 border-white"
-                          style={{ background: "var(--primary)" }}
-                        />
+                        {angkor ? (
+                          <LotusBud className="absolute -left-[28px] top-0 h-[18px] w-[14px]" style={{ color: "var(--primary)" }} />
+                        ) : (
+                          <span
+                            className="absolute -left-[27px] top-1.5 h-3 w-3 rounded-full border-2 border-white"
+                            style={{ background: "var(--primary)" }}
+                          />
+                        )}
                         <p className="text-xs font-semibold tabular-nums opacity-80">{it.time}</p>
                         <p className="text-sm">{it.name}</p>
                       </li>
@@ -240,9 +289,10 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
 
         {/* ---------- Gallery ---------- */}
         {sections.gallery && c.gallery.length > 0 && (
-          <section className="px-4 py-14" style={{ background: gradient }}>
+          <section className={sec("px-4 py-14")} style={{ background: gradient }}>
+            {band}
             <Reveal>
-              <SectionTitle>{t.gallery}</SectionTitle>
+              <SectionTitle angkor={angkor}>{t.gallery}</SectionTitle>
             </Reveal>
             <div className="grid grid-cols-2 gap-2">
               {c.gallery.map((src, i) => {
@@ -250,7 +300,7 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
                 const wide = i % 3 === 0 || (i % 3 === 1 && i === c.gallery.length - 1);
                 return (
                 <Reveal key={src + i} delay={(i % 2) * 0.08} className={wide ? "col-span-2" : ""}>
-                  <button onClick={() => setZoom(src)} className="block w-full overflow-hidden" style={{ borderRadius: "var(--radius)" }}>
+                  <button onClick={() => setZoom(src)} className="photo block w-full overflow-hidden" style={{ borderRadius: "var(--radius)" }}>
                     <Image
                       src={src}
                       alt=""
@@ -270,9 +320,10 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
 
         {/* ---------- Location ---------- */}
         {sections.map && (c.mapUrl || c.mapImage) && (
-          <section className="px-6 py-14">
+          <section className={sec("px-6 py-14")} style={angkor ? { background: gradient } : undefined}>
+            {band}
             <Reveal>
-              <SectionTitle>{t.location}</SectionTitle>
+              <SectionTitle angkor={angkor}>{t.location}</SectionTitle>
               <div className="card overflow-hidden">
                 {c.mapImage && <Image src={c.mapImage} alt="map" unoptimized={unoptimized(c.mapImage)} width={960} height={640} sizes="(max-width: 480px) 100vw, 480px" className="h-auto w-full object-cover" />}
                 <div className="space-y-3 p-4 text-center">
@@ -290,9 +341,10 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
 
         {/* ---------- RSVP ---------- */}
         {sections.rsvp && (
-          <section className="px-6 py-12" style={{ background: gradient }}>
+          <section className={sec("px-6 py-12")} style={{ background: gradient }}>
+            {band}
             <Reveal>
-              <SectionTitle>{t.rsvp}</SectionTitle>
+              <SectionTitle angkor={angkor}>{t.rsvp}</SectionTitle>
               <Rsvp code={guest.code} initialStatus={guest.rsvp_status} initialCount={guest.rsvp_count} preview={preview} t={t} />
             </Reveal>
           </section>
@@ -300,9 +352,10 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
 
         {/* ---------- Wishes ---------- */}
         {sections.wishes && (
-          <section className="px-6 py-12">
+          <section className={sec("px-6 py-12")} style={angkor ? { background: gradient } : undefined}>
+            {band}
             <Reveal>
-              <SectionTitle>{t.wishes}</SectionTitle>
+              <SectionTitle angkor={angkor}>{t.wishes}</SectionTitle>
               <Wishes code={guest.code} initial={wishes} preview={preview} t={t} />
             </Reveal>
           </section>
@@ -310,9 +363,10 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
 
         {/* ---------- Gift ---------- */}
         {sections.gift && (c.qrUsd || c.qrKhr) && (
-          <section className="px-6 py-12" style={{ background: gradient }}>
+          <section className={sec("px-6 py-12")} style={{ background: gradient }}>
+            {band}
             <Reveal>
-              <SectionTitle>{t.gift}</SectionTitle>
+              <SectionTitle angkor={angkor}>{t.gift}</SectionTitle>
               <div className="grid grid-cols-2 gap-3">
                 {[
                   ["USD", c.qrUsd],
@@ -320,7 +374,7 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
                 ]
                   .filter(([, src]) => src)
                   .map(([cur, src]) => (
-                    <button key={cur} onClick={() => setZoom(src)} className="card p-3 text-center">
+                    <button key={cur} onClick={() => setZoom(src)} className="card plain p-3 text-center">
                       <img src={src} alt={`KHQR ${cur}`} className="mx-auto aspect-square w-full object-contain" />
                       <p className="mt-2 text-sm font-semibold">{cur}</p>
                     </button>
@@ -339,8 +393,10 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
         )}
 
         {/* ---------- Gratitude ---------- */}
-        <section className="bg-cover bg-center px-6 pb-28 pt-14 text-center" style={bg(c.mainBackground, gradient)}>
+        <section className={sec("bg-cover bg-center px-6 pb-28 pt-14 text-center")} style={bg(c.mainBackground, gradient)}>
+          {band}
           <Reveal className="card space-y-4 p-6">
+            {angkor && <Lotus className="mx-auto h-8 w-12" style={{ color: "var(--primary)" }} />}
             <p className="font-heading text-base leading-relaxed" style={{ color: "var(--primary)" }}>
               {text.gratitude_title}
             </p>
@@ -350,6 +406,11 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
               {event.groom} <span className="font-script text-2xl" style={{ color: "var(--primary)" }}>&amp;</span> {event.bride}
             </p>
           </Reveal>
+          {angkor && (
+            <Reveal className="mt-10" delay={0.15}>
+              <AngkorSkyline reflection={false} className="mx-auto w-full max-w-[340px] opacity-80" style={{ color: "var(--primary)" }} />
+            </Reveal>
+          )}
         </section>
       </div>
 

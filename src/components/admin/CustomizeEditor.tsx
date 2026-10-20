@@ -9,6 +9,8 @@ import {
   KH_FONTS,
   SECTION_KEYS,
   TEXT_FIELDS,
+  THEME_PRESETS,
+  type Theme,
   type EventConfig,
   type EventData,
   type InvitationText,
@@ -58,6 +60,16 @@ function fromLocalInput(value: string) {
   return value ? new Date(`${value}:00${EVENT_TZ_OFFSET}`).toISOString() : null;
 }
 
+const THEME_OPTIONS: { id: Theme; name: string; desc: string; swatch: string[] }[] = [
+  { id: "classic", name: "Classic", desc: "Soft cream and peach with floating petals", swatch: ["#fffaf2", "#f9af59", "#B08E4F"] },
+  {
+    id: "angkor",
+    name: "Angkor temple",
+    desc: "Sandstone and gold: Angkor Wat skyline, naga arch, lotus and kbach ornament",
+    swatch: ["#f4ead6", "#b7862f", "#6b4a2b"],
+  },
+];
+
 export function CustomizeEditor({ initial, agenda }: { initial: EventData; agenda: ScheduleDay[] }) {
   const [tab, setTab] = useState<Tab>("Couple & Date");
   const [data, setData] = useState(initial);
@@ -73,6 +85,8 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
     setMsg("");
   };
   const cfg = <K extends keyof EventConfig>(k: K, v: EventConfig[K]) => patch({ config: { ...data.config, [k]: v } });
+  // Picking a style also applies its colours/script font; they can still be fine-tuned below.
+  const pickTheme = (theme: Theme) => patch({ config: { ...data.config, theme, ...THEME_PRESETS[theme] } });
   const txtKey = lang === "kh" ? "text_kh" : "text_en";
   const setText = (k: keyof InvitationText, v: string) => patch({ [txtKey]: { ...data[txtKey], [k]: v } });
 
@@ -167,6 +181,36 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
 
         {tab === "Theme" && (
           <Card className="space-y-5">
+            {/* Not a <Field>: that is a <label>, which would forward stray clicks to the first button. */}
+            <div className="space-y-1.5" role="radiogroup" aria-label="Style">
+              <span className="text-sm font-medium text-neutral-700">Style</span>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {THEME_OPTIONS.map((o) => (
+                  <button
+                    key={o.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={data.config.theme === o.id}
+                    onClick={() => pickTheme(o.id)}
+                    className={cx(
+                      "flex items-center gap-3 rounded-xl border p-3 text-left transition",
+                      data.config.theme === o.id ? "border-rose-600 ring-2 ring-rose-200" : "border-neutral-200 hover:border-neutral-400",
+                    )}
+                  >
+                    <span className="flex shrink-0 overflow-hidden rounded-lg border border-neutral-200">
+                      {o.swatch.map((col) => (
+                        <span key={col} className="h-10 w-4" style={{ background: col }} />
+                      ))}
+                    </span>
+                    <span>
+                      <span className="block text-sm font-medium">{o.name}</span>
+                      <span className="block text-xs text-neutral-500">{o.desc}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <span className="block text-xs text-neutral-500">Choosing a style also sets matching colours and English font. You can adjust them afterwards.</span>
+            </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <ColorField label="Primary color" value={data.config.primaryColor} onChange={(v) => cfg("primaryColor", v)} />
               <ColorField label="Text color" value={data.config.textColor} onChange={(v) => cfg("textColor", v)} />

@@ -36,7 +36,7 @@ export function Countdown({ date, t }: { date: string; t: Labels }) {
   return (
     <div className="grid grid-cols-4 gap-2">
       {cells.map(([n, label]) => (
-        <div key={label} className="card py-3 text-center">
+        <div key={label} className="card count-cell py-3 text-center">
           <div className="text-2xl font-semibold tabular-nums" style={{ color: "var(--primary)" }}>
             {String(n).padStart(2, "0")}
           </div>

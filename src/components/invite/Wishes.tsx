@@ -53,7 +53,7 @@ export function Wishes({ code, initial, preview, t }: { code: string; initial: P
       {wishes.length > 0 && (
         <ul className="max-h-96 space-y-2 overflow-y-auto pr-1">
           {wishes.map((w) => (
-            <li key={w.id} className="card p-3 text-sm">
+            <li key={w.id} className="card compact p-3 text-sm">
               <p className="whitespace-pre-line">{w.message}</p>
               <p className="mt-1 text-right text-xs font-semibold" style={{ color: "var(--primary)" }}>
                 — {w.name}

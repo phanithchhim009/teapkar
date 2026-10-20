@@ -1,6 +1,18 @@
 import { z } from "zod";
 
+export const THEMES = ["classic", "angkor"] as const;
+export type Theme = (typeof THEMES)[number];
+
+/** Colours and fonts applied when a theme is picked in the admin; they stay editable afterwards. */
+export const THEME_PRESETS: Record<Theme, { primaryColor: string; textColor: string; guestNameColor: string; fontEn: string }> = {
+  classic: { primaryColor: "#f9af59", textColor: "#B08E4F", guestNameColor: "#364153", fontEn: "Great Vibes" },
+  // Aged gilding, carved sandstone shadow and laterite brown, as at Angkor Wat at sunrise.
+  angkor: { primaryColor: "#b7862f", textColor: "#6b4a2b", guestNameColor: "#4a2c17", fontEn: "Cormorant Garamond" },
+};
+
 export const eventConfigSchema = z.object({
+  // Unknown values (e.g. a theme removed later) fall back to classic instead of breaking the page.
+  theme: z.enum(THEMES).catch("classic").default("classic"),
   primaryColor: z.string().default("#f9af59"),
   textColor: z.string().default("#B08E4F"),
   guestNameColor: z.string().default("#364153"),
