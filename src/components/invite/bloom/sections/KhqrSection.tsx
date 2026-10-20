@@ -22,7 +22,7 @@ export function KhqrSection({ config: c, onZoom }: { config: EventConfig; onZoom
       <Heading title={t.khqr} />
       {options.length > 1 && (
         <Reveal variant="fadeUpSm" className="mb-5 flex justify-center">
-          <div role="tablist" aria-label="Currency" className="bloom-glass inline-flex rounded-full p-1">
+          <div role="tablist" aria-label={t.currency} className="bloom-glass inline-flex rounded-full p-1">
             {options.map((o) => (
               <button
                 key={o.id}

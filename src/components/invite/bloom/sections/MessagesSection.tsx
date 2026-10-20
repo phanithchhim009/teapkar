@@ -1,5 +1,6 @@
 "use client";
 
+import type { InviteGuest } from "../../Invitation";
 import { Rsvp } from "../../Rsvp";
 import { useWishes, type PublicWish } from "../../Wishes";
 import { Tx, useBloom } from "../BloomContext";
@@ -11,7 +12,7 @@ type Props = {
   code: string;
   preview: boolean;
   wishes: PublicWish[] | null; // null = guestbook switched off
-  rsvp: { status: "pending" | "yes" | "no"; count: number } | null; // null = RSVP switched off
+  rsvp: { status: InviteGuest["rsvp_status"]; count: number } | null; // null = RSVP switched off
 };
 
 /** RSVP + guestbook in one section, so the dock keeps a single "messages" stop. */

@@ -22,6 +22,8 @@ export function FloralFrame({ config, reduced }: { config: BloomConfig; reduced:
   if (config.frameVideo) {
     return (
       <video
+        // autoPlay only applies at mount: remount when the reduced-motion preference resolves.
+        key={String(reduced)}
         aria-hidden
         className="pointer-events-none absolute inset-0 h-full w-full object-cover"
         src={config.frameVideo}

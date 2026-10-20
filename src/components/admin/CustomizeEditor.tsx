@@ -191,15 +191,14 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
         {tab === "Theme" && (
           <Card className="space-y-5">
             {/* Not a <Field>: that is a <label>, which would forward stray clicks to the first button. */}
-            <div className="space-y-1.5" role="radiogroup" aria-label="Style">
+            <div className="space-y-1.5" role="group" aria-label="Style">
               <span className="text-sm font-medium text-neutral-700">Style</span>
               <div className="grid gap-3 sm:grid-cols-2">
                 {THEME_OPTIONS.map((o) => (
                   <button
                     key={o.id}
                     type="button"
-                    role="radio"
-                    aria-checked={data.config.theme === o.id}
+                    aria-pressed={data.config.theme === o.id}
                     onClick={() => pickTheme(o.id)}
                     className={cx(
                       "flex items-center gap-3 rounded-xl border p-3 text-left transition",

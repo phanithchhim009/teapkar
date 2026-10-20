@@ -89,8 +89,6 @@ export const CONTROLS = { duration: 0.5, langX: -25, musicX: 25, dockY: 50, topY
 /* ---------- Intro "arch reveal" ---------- */
 
 export const INTRO = {
-  /** Default hold length; the admin can change the total (3–12s). */
-  total: 7,
   fadeIn: 0.3,
   archGrow: { delay: 0.2, duration: 1.0 },
   flowersIn: { delay: 0.8, duration: 1.2 },

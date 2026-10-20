@@ -46,6 +46,8 @@ export const labels = {
     toTop: "ត្រឡប់ទៅលើ",
     music: "បើក/បិទតន្ត្រី",
     madeWith: "រចនាដោយក្តីស្រឡាញ់",
+    viewPhoto: "មើលរូបភាព",
+    currency: "រូបិយប័ណ្ណ",
   },
   en: {
     open: "Open Invitation",
@@ -92,6 +94,8 @@ export const labels = {
     toTop: "Back to top",
     music: "Toggle music",
     madeWith: "Made with love",
+    viewPhoto: "View photo",
+    currency: "Currency",
   },
 } satisfies Record<Lang, Record<string, string>>;
 

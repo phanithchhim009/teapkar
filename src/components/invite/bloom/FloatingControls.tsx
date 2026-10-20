@@ -35,7 +35,7 @@ type Props = { lang: Lang; onLang: () => void; hasMusic: boolean; playing: boole
 
 /** Language + music (top) and scroll-to-top (bottom right), slid in once the invitation is open. */
 export function FloatingControls({ lang, onLang, hasMusic, playing, onMusic }: Props) {
-  const { t, scrollRef } = useBloom();
+  const { t, scrollRef, reduced } = useBloom();
   const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export function FloatingControls({ lang, onLang, hasMusic, playing, onMusic }: P
             <motion.button
               type="button"
               aria-label={t.toTop}
-              onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" })}
+              onClick={() => scrollRef.current?.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" })}
               className="flex h-11 w-11 items-center justify-center rounded-full text-white shadow-lg"
               style={{ background: "var(--green)" }}
               initial={{ opacity: 0, scale: 0.6 }}

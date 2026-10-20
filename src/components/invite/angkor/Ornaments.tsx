@@ -96,7 +96,7 @@ function ScrollHalf() {
 
 export function KbachDivider({ className, style }: SvgProps) {
   return (
-    <svg viewBox="0 0 240 30" className={className} style={style} color="currentColor" aria-hidden>
+    <svg viewBox="0 0 240 30" className={className} style={style} aria-hidden>
       <ScrollHalf />
       <g transform="translate(240 0) scale(-1 1)">
         <ScrollHalf />

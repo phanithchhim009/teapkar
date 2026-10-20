@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, type Variants } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { BloomConfig } from "@/lib/types";
 import { EASE, INTRO, SWAY } from "./animations/variants";
 import { useBloom } from "./BloomContext";
@@ -60,9 +60,14 @@ function Flowers({ corner, src }: { corner: "tl" | "br"; src: string }) {
 export function IntroArch({ config, date, monogram, onDone }: Props) {
   const { t, lang } = useBloom();
   const video = config.introVideo;
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (video) return; // the video's own end decides
+    if (video) {
+      // A blocked autoplay (Low Power Mode, data saver) fires neither ended nor error: end the intro instead.
+      videoRef.current?.play().catch(onDone);
+      return; // otherwise the video's own end decides
+    }
     const id = setTimeout(onDone, config.introDuration * 1000);
     return () => clearTimeout(id);
   }, [video, config.introDuration, onDone]);
@@ -77,7 +82,7 @@ export function IntroArch({ config, date, monogram, onDone }: Props) {
       exit={{ opacity: 0, transition: { duration: INTRO.fadeOut } }}
     >
       {video ? (
-        <video className="absolute inset-0 h-full w-full object-cover" src={video} autoPlay muted playsInline onEnded={onDone} onError={onDone} />
+        <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" src={video} autoPlay muted playsInline onEnded={onDone} onError={onDone} />
       ) : (
         <>
           {/* Arch: cream panel, double gold rim, soft outer shadow. */}

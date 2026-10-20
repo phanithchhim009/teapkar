@@ -9,16 +9,18 @@ import { Tx, useBloom } from "../BloomContext";
 import { Reveal } from "../Reveal";
 import { Heading, Section } from "./Heading";
 
-export function LocationSection({ mapUrl, mapImage, location }: { mapUrl: string; mapImage: string; location: string }) {
+type Props = { color: string; mapUrl: string; mapImage: string; location: string };
+
+export function LocationSection({ color, mapUrl, mapImage, location }: Props) {
   const { t } = useBloom();
   const [qr, setQr] = useState("");
 
   useEffect(() => {
     if (!mapUrl) return;
-    QRCode.toDataURL(mapUrl, { width: 320, margin: 1, color: { dark: "#43652F", light: "#ffffff" } })
+    QRCode.toDataURL(mapUrl, { width: 320, margin: 1, color: { dark: color, light: "#ffffff" } })
       .then(setQr)
       .catch(() => setQr(""));
-  }, [mapUrl]);
+  }, [mapUrl, color]);
 
   return (
     <Section id="location">

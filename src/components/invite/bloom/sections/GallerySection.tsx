@@ -17,14 +17,14 @@ function isWide(i: number, count: number) {
 }
 
 function Photo({ src, wide, onOpen }: { src: string; wide: boolean; onOpen: () => void }) {
-  const { scrollRef, reduced, intensity } = useBloom();
+  const { t, scrollRef, reduced, intensity } = useBloom();
   const ref = useRef<HTMLButtonElement>(null);
   const { scrollYProgress } = useScroll({ container: scrollRef, target: ref, offset: ["start end", "end start"] });
   const travel = reduced ? 0 : intensity === "subtle" ? PARALLAX / 2 : PARALLAX;
   const y = useTransform(scrollYProgress, [0, 1], [-travel, travel]);
 
   return (
-    <button ref={ref} type="button" onClick={onOpen} className="relative block w-full overflow-hidden rounded-2xl shadow-sm" aria-label="View photo">
+    <button ref={ref} type="button" onClick={onOpen} className="relative block w-full overflow-hidden rounded-2xl shadow-sm" aria-label={t.viewPhoto}>
       {/* Oversized by the parallax travel so the edges never show. */}
       <motion.div className={`relative ${wide ? "aspect-[4/3]" : "aspect-[3/4]"}`} style={{ y, scale: travel ? 1.12 : 1 }}>
         <Image

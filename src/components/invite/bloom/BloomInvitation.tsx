@@ -39,17 +39,10 @@ type Scene = "cover" | "opening" | "intro" | "main";
 
 const firstChar = (s: string) => Array.from(s.trim())[0] ?? "";
 
+/** Warms the image cache. Videos are skipped: there is no valid preload destination for them. */
 function preload(src: string) {
-  if (!src) return;
-  if (/\.(mp4|webm|mov)(\?|$)/i.test(src)) {
-    const link = document.createElement("link");
-    link.rel = "preload";
-    link.as = "video";
-    link.href = src;
-    document.head.appendChild(link);
-  } else {
-    new Image().src = src;
-  }
+  if (!src || /\.(mp4|webm|mov)(\?|$)/i.test(src)) return;
+  new Image().src = src;
 }
 
 export function BloomInvitation({ event, agenda, guest, wishes, initialLang, preview = false }: Props) {
@@ -81,8 +74,11 @@ export function BloomInvitation({ event, agenda, guest, wishes, initialLang, pre
 
   // Warm the cache while the guest is still reading the cover.
   useEffect(() => {
-    [hero, b.introFlowerTop, b.introFlowerBottom, b.introVideo, b.monogram].forEach(preload);
-  }, [hero, b.introFlowerTop, b.introFlowerBottom, b.introVideo, b.monogram]);
+    [hero, b.monogram, ...(playIntro ? [b.introFlowerTop, b.introFlowerBottom] : [])].forEach(preload);
+  }, [hero, b.monogram, playIntro, b.introFlowerTop, b.introFlowerBottom]);
+
+  const openTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  useEffect(() => () => clearTimeout(openTimer.current), []);
 
   // Pause the music while the tab is hidden; resume only if it was playing.
   useEffect(() => {
@@ -101,7 +97,7 @@ export function BloomInvitation({ event, agenda, guest, wishes, initialLang, pre
     // Music must start inside this tap to satisfy autoplay rules.
     if (audio.current && c.music) audio.current.play().then(() => setPlaying(true)).catch(() => {});
     setScene("opening");
-    setTimeout(() => setScene(playIntro ? "intro" : "main"), coverExitLead(COVER_ITEMS) * 1000);
+    openTimer.current = setTimeout(() => setScene(playIntro ? "intro" : "main"), coverExitLead(COVER_ITEMS) * 1000);
   };
 
   const finishIntro = useCallback(() => setScene("main"), []);
@@ -173,7 +169,7 @@ export function BloomInvitation({ event, agenda, guest, wishes, initialLang, pre
               <div ref={scrollRef} className="bloom-scroll relative z-10 h-full overflow-y-auto overflow-x-hidden">
                 <MainSection event={event} text={text} hero={hero} guestName={guest.name} />
                 {showSchedule && <ScheduleSection title={text.details_title || t.schedule} subtitle={text.date_time} agenda={agenda} />}
-                {showMap && <LocationSection mapUrl={c.mapUrl} mapImage={c.mapImage} location={text.location} />}
+                {showMap && <LocationSection color={b.green} mapUrl={c.mapUrl} mapImage={c.mapImage} location={text.location} />}
                 {showGallery && <GallerySection photos={c.gallery} onOpen={setZoom} />}
                 {showKhqr && <KhqrSection config={c} onZoom={setZoom} />}
                 {showMessages && (
