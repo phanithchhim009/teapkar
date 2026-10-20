@@ -11,7 +11,10 @@ import { Reveal } from "./Reveal";
 /** One digit that slides up out of its slot when it changes. */
 function Digit({ value }: { value: string }) {
   return (
-    <span className="relative inline-block h-[1.2em] w-[0.62em] overflow-hidden align-top">
+    // An invisible copy sizes the slot to the glyph (Khmer digits are wider/taller than Latin ones);
+    // only the vertical axis is clipped, for the slide.
+    <span className="relative inline-block overflow-x-visible overflow-y-clip align-top leading-[1.7]">
+      <span className="invisible">{value}</span>
       <AnimatePresence initial={false} mode="popLayout">
         <motion.span
           key={value}
@@ -54,7 +57,7 @@ export function BloomCountdown({ date }: { date: string }) {
         const shown = lang === "kh" ? khDigits(text) : text;
         return (
           <Reveal key={i} variant="popIn" delay={i * STAGGER} className="bloom-glass-green rounded-2xl py-3 text-center text-white">
-            <div className="text-2xl font-semibold tabular-nums leading-tight" aria-hidden>
+            <div className="text-2xl font-semibold tabular-nums" aria-hidden>
               {Array.from(shown).map((ch, j) => (
                 <Digit key={j} value={ch} />
               ))}
