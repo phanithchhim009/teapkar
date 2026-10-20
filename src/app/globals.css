@@ -171,3 +171,79 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .theme-angkor .sun { animation: none; }
 }
+
+/* ---------- "bloom" theme: watercolor florals, gold lettering, deep leaf green ---------- */
+.theme-bloom {
+  --gold-from: #facc15;
+  --gold-via: #fde047;
+  --gold-to: #ca8a04;
+  --green: #43652f;
+  --sage: #a5ae79;
+}
+/* Moul's tall stacked vowels clip at normal line-height. */
+.theme-bloom .font-title { line-height: 1.7; }
+.theme-bloom .bloom-title { line-height: 1.75; padding-block: 0.1em; }
+.theme-bloom .bloom-gold {
+  background-image: linear-gradient(100deg, var(--gold-to), var(--gold-from) 30%, var(--gold-via) 50%, var(--gold-from) 70%, var(--gold-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  /* A hairline shadow keeps pale gold legible on cream. */
+  filter: drop-shadow(0 1px 0 rgb(120 80 0 / 0.28));
+}
+/* Soft pink/purple washes behind the corner flowers. */
+.theme-bloom .bloom-wash {
+  background:
+    radial-gradient(60% 40% at 0% 0%, rgb(247 185 201 / 0.55), transparent 70%),
+    radial-gradient(45% 30% at 100% 0%, rgb(214 184 236 / 0.35), transparent 70%),
+    radial-gradient(45% 30% at 0% 100%, rgb(247 185 201 / 0.35), transparent 70%),
+    radial-gradient(60% 40% at 100% 100%, rgb(247 185 201 / 0.5), transparent 70%);
+}
+.theme-bloom .bloom-glass {
+  background: rgb(255 255 255 / 0.6);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  box-shadow: 0 6px 20px -10px rgb(67 101 47 / 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.theme-bloom .bloom-glass-green {
+  background: color-mix(in srgb, var(--green) 72%, transparent);
+  border: 1px solid rgb(255 255 255 / 0.35);
+  box-shadow: 0 10px 24px -14px color-mix(in srgb, var(--green) 90%, transparent), inset 0 1px 0 rgb(255 255 255 / 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.theme-bloom .bloom-card {
+  background: rgb(255 255 255 / 0.72);
+  border: 1px solid color-mix(in srgb, var(--gold-from) 55%, transparent);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px -18px rgb(120 90 40 / 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+/* Ornamental gold pill: double gold rim around a cream fill. */
+.theme-bloom .bloom-pill {
+  color: #7a5a06;
+  background: linear-gradient(180deg, #fffaf0, #fdf1cf);
+  border-radius: 9999px;
+  border: 1.5px solid var(--gold-to);
+  box-shadow: inset 0 0 0 3px #fffaf0, inset 0 0 0 4px color-mix(in srgb, var(--gold-from) 80%, transparent), 0 8px 22px -12px rgb(150 110 20 / 0.6);
+}
+/* Hero photo melts into the background at the top and bottom. */
+.theme-bloom .bloom-feather {
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 72%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 72%, transparent 100%);
+}
+.theme-bloom .bloom-scroll,
+.theme-bloom .bloom-inner-scroll { scrollbar-width: none; }
+.theme-bloom .bloom-scroll::-webkit-scrollbar,
+.theme-bloom .bloom-inner-scroll::-webkit-scrollbar { display: none; }
+/* Shared RSVP form, restyled for Bloom. */
+.theme-bloom .card {
+  background: rgb(255 255 255 / 0.72);
+  border: 1px solid color-mix(in srgb, var(--gold-from) 55%, transparent);
+  border-radius: 1.25rem;
+}
+.theme-bloom .btn-primary { background: var(--green); border-radius: 9999px; }

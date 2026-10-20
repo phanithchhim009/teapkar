@@ -224,9 +224,9 @@ export async function saveAgenda(input: AgendaInput) {
   });
 }
 
-// Keep in sync with allowed_mime_types on the media bucket (supabase/migrations/0002_hardening.sql).
+// Keep in sync with allowed_mime_types on the media bucket (supabase/migrations/0003_bloom_video.sql).
 // SVG is deliberately excluded: it can carry script and the bucket is public.
-const ALLOWED_TYPES = /^(image\/(png|jpe?g|webp|gif|avif)|audio\/(mpeg|mp3|mp4|aac|ogg|wav|x-m4a))$/;
+const ALLOWED_TYPES = /^(image\/(png|jpe?g|webp|gif|avif)|audio\/(mpeg|mp3|mp4|aac|ogg|wav|x-m4a)|video\/(mp4|webm))$/;
 const MAX_UPLOAD = 15 * 1024 * 1024;
 
 /**

@@ -11,6 +11,7 @@ import {
   TEXT_FIELDS,
   THEME_PRESETS,
   type Theme,
+  type BloomConfig,
   type EventConfig,
   type EventData,
   type InvitationText,
@@ -68,6 +69,12 @@ const THEME_OPTIONS: { id: Theme; name: string; desc: string; swatch: string[] }
     desc: "Sandstone and gold: Angkor Wat skyline, naga arch, lotus and kbach ornament",
     swatch: ["#f4ead6", "#b7862f", "#6b4a2b"],
   },
+  {
+    id: "bloom",
+    name: "Bloom",
+    desc: "Watercolor florals and gold lettering, with an animated arch intro and scroll reveals",
+    swatch: ["#fdf2f5", "#eab308", "#43652F"],
+  },
 ];
 
 export function CustomizeEditor({ initial, agenda }: { initial: EventData; agenda: ScheduleDay[] }) {
@@ -85,6 +92,8 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
     setMsg("");
   };
   const cfg = <K extends keyof EventConfig>(k: K, v: EventConfig[K]) => patch({ config: { ...data.config, [k]: v } });
+  const bcfg = <K extends keyof BloomConfig>(k: K, v: BloomConfig[K]) => cfg("bloom", { ...data.config.bloom, [k]: v });
+  const bloom = data.config.theme === "bloom";
   // Picking a style also applies its colours/script font; they can still be fine-tuned below.
   const pickTheme = (theme: Theme) => patch({ config: { ...data.config, theme, ...THEME_PRESETS[theme] } });
   const txtKey = lang === "kh" ? "text_kh" : "text_en";
@@ -229,6 +238,7 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
                 <input type="range" min={0} max={32} value={data.config.borderRadius} onChange={(e) => cfg("borderRadius", Number(e.target.value))} className="w-full accent-rose-600" />
               </Field>
             </div>
+            {bloom && <BloomOptions value={data.config.bloom} set={bcfg} />}
           </Card>
         )}
 
@@ -240,6 +250,23 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
               <MediaUpload label="Agenda background" value={data.config.detailsBackground} onChange={(v) => cfg("detailsBackground", v)} />
               <MediaUpload label="Background music (mp3)" kind="audio" value={data.config.music} onChange={(v) => cfg("music", v)} />
             </div>
+            {bloom && (
+              <div className="space-y-3 border-t border-neutral-100 pt-5">
+                <div>
+                  <h3 className="text-sm font-semibold">Bloom artwork</h3>
+                  <p className="text-xs text-neutral-500">Leave empty to use the built-in watercolor flowers. A video replaces its image.</p>
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <MediaUpload label="Couple photo (hero)" value={data.config.bloom.heroPhoto} onChange={(v) => bcfg("heroPhoto", v)} />
+                  <MediaUpload label="Monogram / logo (transparent PNG)" value={data.config.bloom.monogram} onChange={(v) => bcfg("monogram", v)} />
+                  <MediaUpload label="Background frame image" value={data.config.bloom.frameImage} onChange={(v) => bcfg("frameImage", v)} />
+                  <MediaUpload label="Background frame loop (mp4)" kind="video" value={data.config.bloom.frameVideo} onChange={(v) => bcfg("frameVideo", v)} />
+                  <MediaUpload label="Intro flowers, top-left (transparent PNG)" value={data.config.bloom.introFlowerTop} onChange={(v) => bcfg("introFlowerTop", v)} />
+                  <MediaUpload label="Intro flowers, bottom-right (transparent PNG)" value={data.config.bloom.introFlowerBottom} onChange={(v) => bcfg("introFlowerBottom", v)} />
+                  <MediaUpload label="Intro video (replaces the arch animation)" kind="video" value={data.config.bloom.introVideo} onChange={(v) => bcfg("introVideo", v)} />
+                </div>
+              </div>
+            )}
             <GalleryEditor value={data.config.gallery} onChange={(v) => cfg("gallery", v)} />
             <div className="grid gap-5 border-t border-neutral-100 pt-5 sm:grid-cols-2">
               <MediaUpload label="Map image (optional)" value={data.config.mapImage} onChange={(v) => cfg("mapImage", v)} />
@@ -305,6 +332,52 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
         <div className="mx-auto h-[760px] max-h-[80dvh] w-full max-w-[390px] overflow-hidden rounded-[2rem] border-8 border-neutral-900 bg-neutral-900 shadow-xl">
           <iframe key={previewKey} src="/admin/preview" className="h-full w-full rounded-[1.5rem] bg-white" title="Invitation preview" />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function BloomOptions({ value: b, set }: { value: BloomConfig; set: <K extends keyof BloomConfig>(k: K, v: BloomConfig[K]) => void }) {
+  return (
+    <div className="space-y-4 border-t border-neutral-100 pt-5">
+      <h3 className="text-sm font-semibold">Bloom options</h3>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <ColorField label="Gold (light)" value={b.goldFrom} onChange={(v) => set("goldFrom", v)} />
+        <ColorField label="Gold (highlight)" value={b.goldVia} onChange={(v) => set("goldVia", v)} />
+        <ColorField label="Gold (deep)" value={b.goldTo} onChange={(v) => set("goldTo", v)} />
+        <ColorField label="Primary green" value={b.green} onChange={(v) => set("green", v)} />
+        <ColorField label="Sage (message cards)" value={b.sage} onChange={(v) => set("sage", v)} />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Field label="Intro animation">
+          <Select value={b.intro ? "on" : "off"} onChange={(e) => set("intro", e.target.value === "on")}>
+            <option value="on">On</option>
+            <option value="off">Off</option>
+          </Select>
+        </Field>
+        <Field label={`Intro length: ${b.introDuration}s`}>
+          <input type="range" min={3} max={12} value={b.introDuration} onChange={(e) => set("introDuration", Number(e.target.value))} className="w-full accent-rose-600" />
+        </Field>
+        <Field label="Skip button">
+          <Select value={b.skipButton ? "on" : "off"} onChange={(e) => set("skipButton", e.target.value === "on")}>
+            <option value="on">Shown</option>
+            <option value="off">Hidden</option>
+          </Select>
+        </Field>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Scroll reveals" hint="Replay: sections animate out when they leave the screen and play again on the way back.">
+          <Select value={b.revealMode} onChange={(e) => set("revealMode", e.target.value as BloomConfig["revealMode"])}>
+            <option value="replay">Replay on scroll</option>
+            <option value="once">Animate once</option>
+          </Select>
+        </Field>
+        <Field label="Animation intensity">
+          <Select value={b.intensity} onChange={(e) => set("intensity", e.target.value as BloomConfig["intensity"])}>
+            <option value="normal">Normal</option>
+            <option value="subtle">Subtle</option>
+          </Select>
+        </Field>
       </div>
     </div>
   );

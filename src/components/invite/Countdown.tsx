@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Labels } from "./i18n";
 
-function diff(target: number) {
+export function diff(target: number) {
   const ms = Math.max(0, target - Date.now());
   return {
     done: ms === 0,

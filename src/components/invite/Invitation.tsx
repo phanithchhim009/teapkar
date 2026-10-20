@@ -7,9 +7,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { trackOpen } from "@/app/actions/guest";
 import type { EventData, ScheduleDay } from "@/lib/types";
 import { AngkorSkyline, Lotus, LotusBud, NagaArch } from "./angkor/Ornaments";
+import { BloomInvitation } from "./bloom/BloomInvitation";
 import { Countdown } from "./Countdown";
 import { labels, type Lang } from "./i18n";
 import { Lightbox } from "./Lightbox";
+import { unoptimized } from "./media";
 import { Reveal, SectionTitle } from "./Reveal";
 import { Rsvp } from "./Rsvp";
 import { Wishes, type PublicWish } from "./Wishes";
@@ -31,16 +33,18 @@ type Props = {
   preview?: boolean;
 };
 
-// Only Supabase Storage is allowed in next.config images; pasted external URLs are served as-is.
-const unoptimized = (src: string) => !src.includes(".supabase.co/storage/v1/object/public/");
-
 function bg(url: string, fallback: string) {
   // Percent-encode characters that would end the CSS string early (pasted URLs aren't sanitised).
   const safe = url.replace(/["\\\n\r]/g, encodeURIComponent);
   return url ? { backgroundImage: `url("${safe}")` } : { background: fallback };
 }
 
-export function Invitation({ event, agenda, guest, wishes, initialLang, preview = false }: Props) {
+export function Invitation(props: Props) {
+  // Bloom has its own scene-based component tree; classic and angkor share the one below.
+  return props.event.config.theme === "bloom" ? <BloomInvitation {...props} /> : <ClassicInvitation {...props} />;
+}
+
+function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview = false }: Props) {
   const { config: c, sections } = event;
   const [lang, setLang] = useState<Lang>(initialLang);
   const [opened, setOpened] = useState(false);

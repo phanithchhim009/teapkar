@@ -1,14 +1,47 @@
 import { z } from "zod";
 
-export const THEMES = ["classic", "angkor"] as const;
+export const THEMES = ["classic", "angkor", "bloom"] as const;
 export type Theme = (typeof THEMES)[number];
 
+type ThemePreset = { primaryColor: string; textColor: string; guestNameColor: string; fontEn: string; fontKh?: string; fontBodyKh?: string };
+
 /** Colours and fonts applied when a theme is picked in the admin; they stay editable afterwards. */
-export const THEME_PRESETS: Record<Theme, { primaryColor: string; textColor: string; guestNameColor: string; fontEn: string }> = {
+export const THEME_PRESETS: Record<Theme, ThemePreset> = {
   classic: { primaryColor: "#f9af59", textColor: "#B08E4F", guestNameColor: "#364153", fontEn: "Great Vibes" },
   // Aged gilding, carved sandstone shadow and laterite brown, as at Angkor Wat at sunrise.
   angkor: { primaryColor: "#b7862f", textColor: "#6b4a2b", guestNameColor: "#4a2c17", fontEn: "Cormorant Garamond" },
+  // Watercolor florals with gold lettering and a deep leaf green.
+  bloom: {
+    primaryColor: "#43652F",
+    textColor: "#43652F",
+    guestNameColor: "#b8860b",
+    fontEn: "Cormorant Garamond",
+    fontKh: "Moul",
+    fontBodyKh: "Noto Sans Khmer",
+  },
 };
+
+/** Options only the "bloom" theme reads. Empty media strings mean "use the built-in artwork". */
+export const bloomConfigSchema = z.object({
+  goldFrom: z.string().default("#facc15"),
+  goldVia: z.string().default("#fde047"),
+  goldTo: z.string().default("#ca8a04"),
+  green: z.string().default("#43652F"),
+  sage: z.string().default("#A5AE79"),
+  frameImage: z.string().default(""),
+  frameVideo: z.string().default(""),
+  introFlowerTop: z.string().default(""),
+  introFlowerBottom: z.string().default(""),
+  introVideo: z.string().default(""),
+  monogram: z.string().default(""),
+  heroPhoto: z.string().default(""),
+  intro: z.boolean().catch(true).default(true),
+  introDuration: z.coerce.number().min(3).max(12).catch(7).default(7),
+  skipButton: z.boolean().catch(true).default(true),
+  revealMode: z.enum(["replay", "once"]).catch("replay").default("replay"),
+  intensity: z.enum(["normal", "subtle"]).catch("normal").default("normal"),
+});
+export type BloomConfig = z.infer<typeof bloomConfigSchema>;
 
 export const eventConfigSchema = z.object({
   // Unknown values (e.g. a theme removed later) fall back to classic instead of breaking the page.
@@ -33,6 +66,7 @@ export const eventConfigSchema = z.object({
   accountName: z.string().default(""),
   accountNumber: z.string().default(""),
   gallery: z.array(z.string()).default([]),
+  bloom: bloomConfigSchema.catch(() => bloomConfigSchema.parse({})).default(() => bloomConfigSchema.parse({})),
 });
 export type EventConfig = z.infer<typeof eventConfigSchema>;
 

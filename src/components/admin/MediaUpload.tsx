@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus, Loader2, Music, X } from "lucide-react";
+import { Film, ImagePlus, Loader2, Music, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { createUpload } from "@/app/actions/admin";
 import { unwrap } from "@/lib/action-result";
@@ -29,7 +29,7 @@ export function MediaUpload({
   label: string;
   value: string;
   onChange: (url: string) => void;
-  kind?: "image" | "audio";
+  kind?: "image" | "audio" | "video";
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -50,6 +50,8 @@ export function MediaUpload({
             <img src={value} alt="" className="h-full w-full object-cover" />
           ) : kind === "audio" ? (
             <Music size={20} className={value ? "text-rose-500" : ""} />
+          ) : kind === "video" ? (
+            value ? <video src={value} muted playsInline className="h-full w-full object-cover" /> : <Film size={20} />
           ) : (
             <ImagePlus size={20} />
           )}
@@ -74,7 +76,7 @@ export function MediaUpload({
         ref={input}
         type="file"
         hidden
-        accept={kind === "image" ? "image/*" : "audio/*"}
+        accept={kind === "image" ? "image/*" : kind === "video" ? "video/mp4,video/webm" : "audio/*"}
         onChange={async (e) => {
           const f = e.target.files?.[0];
           e.target.value = "";

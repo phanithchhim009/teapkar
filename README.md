@@ -52,6 +52,38 @@ npm run dev
 
 5. Deploy, open `/admin`, customize the invitation, and add guests.
 
+## Bloom theme (animated)
+
+Pick **Bloom** in **Admin → Customize → Theme**. Its options (gold and green colours, intro on/off and length, Skip button, reveal mode, intensity) appear below the shared colour and font controls. Picking Bloom also sets Moul and Noto Sans Khmer.
+
+How a guest moves through it: the cover, then a tap on "Tap to open" (music starts here), then the cover exit cascade, then the ~7s arch intro (skippable), then the scrolling sections. The sections are `main`, `schedule`, `location`, `gallery`, `khqr`, `messages` (RSVP and guestbook) and the footer. A bottom dock with scroll-spy jumps between them.
+
+Code lives in `src/components/invite/bloom/`. `Invitation.tsx` hands off to `BloomInvitation` when `config.theme === "bloom"`.
+
+**Timings and variants.** All of them are in `bloom/animations/variants.ts`:
+
+| Constant | Value |
+|---|---|
+| `EASE`, `DUR` | `[0.22, 1, 0.36, 1]`, 0.8s |
+| Reveal variants | `fadeUpLg` (y 60), `fadeUp` (y 30), `fadeUpMd` (y 50), `fadeUpSm` (y 20), `scaleIn` (0.9), `popIn` (0.8), `slideLeft`/`slideRight` (x ±20), `grow` (scale 0) |
+| `STAGGER` | 0.12s between siblings |
+| `PARALLAX` | ±20px on gallery photos |
+| `COVER` | entrance stagger 0.15s, y 30; exit 0.8s, 0.2s stagger, y 60; button breathes 1 → 1.025 over 2s |
+| `CONTROLS` | 0.5s slide-in: language from x −25, music from x +25, dock and scroll-to-top from y +50 |
+| `INTRO` | arch grows 0.2–1.2s, flowers fly in from 0.8s, arch settles 1.5–2.3s, monogram 2.3–3.0s, date pieces from 3.0s (0.12s stagger), 0.4s fade-out |
+| `SWAY` | 4s mirrored loop: rotate 2°, x 4px, y 3px |
+
+`intensity: "subtle"` halves every offset. `revealMode: "once"` stops elements from animating out when they leave the screen. When the system asks for reduced motion, the intro is skipped, reveals only fade, and the sway, parallax and pulse loops are off.
+
+**Swapping the artwork.** Everything is built in (inline SVG in `bloom/FlowerArt.tsx`) until it's replaced in **Admin → Customize → Media → Bloom artwork**:
+- **Couple photo:** falls back to *Main background*, then to the first gallery photo.
+- **Monogram:** a transparent PNG. Without one, the couple's initials are drawn in a gold ring.
+- **Background frame:** an image or a looping MP4 (`muted playsInline loop autoPlay`, `object-cover`).
+- **Intro flowers:** transparent PNGs, one for the top-left and one for the bottom-right.
+- **Intro video:** an MP4 that replaces the arch animation and ends the intro when it finishes.
+
+Video uploads need `supabase/migrations/0003_bloom_video.sql`, which lets the media bucket accept `video/mp4` and `video/webm`.
+
 ## Security notes
 
 - Every database read and write goes through server code using the service-role key. RLS is enabled with no public policies, so the anon key gives no access.
