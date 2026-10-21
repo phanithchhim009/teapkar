@@ -1,3 +1,6 @@
+import { EVENT_TYPE_INFO } from "@/lib/event-types";
+import type { EventType } from "@/lib/types";
+
 export type Lang = "kh" | "en";
 
 export const labels = {
@@ -100,3 +103,8 @@ export const labels = {
 } satisfies Record<Lang, Record<string, string>>;
 
 export type Labels = (typeof labels)["kh"];
+
+/** Guest-page labels for an event type; the defaults above are worded for weddings. */
+export function labelsFor(lang: Lang, type: EventType): Labels {
+  return { ...labels[lang], ...EVENT_TYPE_INFO[type].labels[lang] };
+}

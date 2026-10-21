@@ -7,10 +7,11 @@ import { redirect, unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
 import { createSession, destroySession, requireAdmin } from "@/lib/auth";
-import { EVENT_TAG, WISHES_TAG } from "@/lib/event";
+import { eventTag, wishesTag } from "@/lib/event";
+import { EVENT_TYPE_INFO } from "@/lib/event-types";
 import { newGuestCode } from "@/lib/guest-code";
 import { db, MEDIA_BUCKET } from "@/lib/supabase/server";
-import { eventConfigSchema, invitationTextSchema, sectionsSchema } from "@/lib/types";
+import { EVENT_TYPES, eventConfigSchema, invitationTextSchema, sectionsSchema } from "@/lib/types";
 
 /** Runs an admin action, returning failures as data so their messages reach the client in production. */
 async function adminAction<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
@@ -81,7 +82,109 @@ export async function logout() {
   redirect("/admin/login");
 }
 
+/* ---------- shared ---------- */
+
+const idSchema = z.uuid();
+const eventIdSchema = z.coerce.number().int().positive();
+
+/** Refreshes one event's admin pages (dashboard, guests, wishes) and the events list. */
+function revalidateEventAdmin(eventId: number) {
+  revalidatePath(`/admin/events/${eventId}`, "layout");
+  revalidatePath("/admin");
+}
+
+/* ---------- events ---------- */
+
+const eventMetaSchema = z.object({
+  type: z.enum(EVENT_TYPES),
+  name: z.string().trim().min(1, "Event name is required").max(120, "Name is too long (max 120)"),
+});
+
+const newEventSchema = eventMetaSchema.extend({
+  host_a: z.string().trim().max(120),
+  host_b: z.string().trim().max(120).default(""),
+  event_date: z.string().nullable().default(null),
+  copyFromEventId: eventIdSchema.nullable().default(null),
+});
+export type NewEventInput = z.input<typeof newEventSchema>;
+
+/** Creates an event from its type's starter text, or from a copy of another event's design and agenda (not guests). */
+export async function createEvent(input: NewEventInput) {
+  return adminAction(async () => {
+    const data = newEventSchema.parse(input);
+    const info = EVENT_TYPE_INFO[data.type];
+    let design: Record<string, unknown> = {
+      config: eventConfigSchema.parse({}),
+      text_kh: invitationTextSchema.parse(info.text.kh),
+      text_en: invitationTextSchema.parse(info.text.en),
+      sections: sectionsSchema.parse({}),
+    };
+    if (data.copyFromEventId) {
+      const { data: src, error } = await db()
+        .from("event")
+        .select("config, text_kh, text_en, sections")
+        .eq("id", data.copyFromEventId)
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      if (!src) throw new Error("The event to copy no longer exists");
+      design = src;
+    }
+
+    const { data: row, error } = await db()
+      .from("event")
+      .insert({
+        ...design,
+        type: data.type,
+        name: data.name,
+        host_a: data.host_a,
+        host_b: info.pair ? data.host_b : "",
+        event_date: data.event_date || null,
+      })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    const id = row.id as number;
+
+    if (data.copyFromEventId) {
+      const { data: days, error: daysErr } = await db()
+        .from("schedule_day")
+        .select("title, date, items:timeline_item(time, name, sort)")
+        .eq("event_id", data.copyFromEventId)
+        .order("sort");
+      if (daysErr) throw new Error(daysErr.message);
+      const agenda = (days ?? []).map((d) => ({
+        title: d.title,
+        date: d.date,
+        items: [...(d.items ?? [])].sort((a, b) => a.sort - b.sort).map(({ time, name }) => ({ time, name })),
+      }));
+      const { error: agendaErr } = await db().rpc("save_agenda", { p_event_id: id, p_days: agenda });
+      if (agendaErr) {
+        // Don't leave a half-copied event behind.
+        await db().from("event").delete().eq("id", id);
+        throw new Error(agendaErr.message);
+      }
+    }
+
+    revalidatePath("/admin");
+    return { id };
+  });
+}
+
+/** Deletes an event with its agenda, guests and wishes (on delete cascade). Its guest links stop working. */
+export async function deleteEvent(eventId: number) {
+  return adminAction(async () => {
+    const ev = eventIdSchema.parse(eventId);
+    const { error } = await db().from("event").delete().eq("id", ev);
+    if (error) throw new Error(error.message);
+    revalidateTag(eventTag(ev));
+    revalidateTag(wishesTag(ev));
+    revalidatePath("/", "layout");
+  });
+}
+
 /* ---------- guests ---------- */
+
+// Guest and wish mutations also filter on event_id, so a stale tab can't change another event's rows.
 
 const guestSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(120, "Name is too long (max 120)"),
@@ -92,7 +195,6 @@ const guestSchema = z.object({
 });
 export type GuestInput = z.input<typeof guestSchema>;
 
-const idSchema = z.uuid();
 const MAX_BULK = 5000;
 
 function clean(input: GuestInput) {
@@ -100,50 +202,64 @@ function clean(input: GuestInput) {
   return { ...g, phone: g.phone || null, group_tag: g.group_tag || null, note: g.note || null };
 }
 
-async function insertWithCodes(rows: ReturnType<typeof clean>[]) {
+async function insertWithCodes(eventId: number, rows: ReturnType<typeof clean>[]) {
   // One statement, so a bulk import either fully succeeds or adds nothing.
   // Retry on the (very unlikely) unique-code collision.
   for (let attempt = 0; attempt < 3; attempt++) {
-    const { error } = await db().from("guest").insert(rows.map((r) => ({ ...r, code: newGuestCode() })));
+    const { error } = await db()
+      .from("guest")
+      .insert(rows.map((r) => ({ ...r, event_id: eventId, code: newGuestCode() })));
     if (!error) return;
+    if (error.code === "23503") throw new Error("This event no longer exists");
     if (error.code !== "23505") throw new Error(error.message);
   }
   throw new Error("Could not generate unique guest codes");
 }
 
-export async function createGuest(input: GuestInput) {
+export async function createGuest(eventId: number, input: GuestInput) {
   return adminAction(async () => {
-    await insertWithCodes([clean(input)]);
-    revalidatePath("/admin", "layout");
+    const ev = eventIdSchema.parse(eventId);
+    await insertWithCodes(ev, [clean(input)]);
+    revalidateEventAdmin(ev);
   });
 }
 
-export async function updateGuest(id: string, input: GuestInput) {
+export async function updateGuest(eventId: number, id: string, input: GuestInput) {
   return adminAction(async () => {
-    const { error } = await db().from("guest").update(clean(input)).eq("id", idSchema.parse(id));
+    const ev = eventIdSchema.parse(eventId);
+    const { error } = await db().from("guest").update(clean(input)).eq("id", idSchema.parse(id)).eq("event_id", ev);
     if (error) throw new Error(error.message);
-    revalidatePath("/admin", "layout");
+    revalidateEventAdmin(ev);
   });
 }
 
-export async function deleteGuests(ids: string[]) {
+export async function deleteGuests(eventId: number, ids: string[]) {
   return adminAction(async () => {
-    const { error } = await db().from("guest").delete().in("id", z.array(idSchema).parse(ids));
+    const ev = eventIdSchema.parse(eventId);
+    const { error } = await db().from("guest").delete().in("id", z.array(idSchema).parse(ids)).eq("event_id", ev);
     if (error) throw new Error(error.message);
-    revalidatePath("/admin", "layout");
+    // Their wishes are deleted with them.
+    revalidateTag(wishesTag(ev));
+    revalidateEventAdmin(ev);
   });
 }
 
-export async function regenerateGuestCode(id: string) {
+export async function regenerateGuestCode(eventId: number, id: string) {
   return adminAction(async () => {
-    const { error } = await db().from("guest").update({ code: newGuestCode() }).eq("id", idSchema.parse(id));
+    const ev = eventIdSchema.parse(eventId);
+    const { error } = await db()
+      .from("guest")
+      .update({ code: newGuestCode() })
+      .eq("id", idSchema.parse(id))
+      .eq("event_id", ev);
     if (error) throw new Error(error.message);
-    revalidatePath("/admin", "layout");
+    revalidateEventAdmin(ev);
   });
 }
 
-export async function bulkCreateGuests(rows: GuestInput[]) {
+export async function bulkCreateGuests(eventId: number, rows: GuestInput[]) {
   return adminAction(async () => {
+    const ev = eventIdSchema.parse(eventId);
     if (rows.length > MAX_BULK) throw new Error(`Too many rows (max ${MAX_BULK} per import)`);
     // Validate everything first and report every bad row, rather than failing on the first one.
     const problems: string[] = [];
@@ -158,28 +274,30 @@ export async function bulkCreateGuests(rows: GuestInput[]) {
       const more = problems.length > 5 ? ` (and ${problems.length - 5} more)` : "";
       throw new Error(`Nothing was added. ${problems.slice(0, 5).join("; ")}${more}`);
     }
-    if (cleaned.length) await insertWithCodes(cleaned);
-    revalidatePath("/admin", "layout");
+    if (cleaned.length) await insertWithCodes(ev, cleaned);
+    revalidateEventAdmin(ev);
     return { count: cleaned.length };
   });
 }
 
-export async function resetGuestRsvp(id: string) {
+export async function resetGuestRsvp(eventId: number, id: string) {
   return adminAction(async () => {
+    const ev = eventIdSchema.parse(eventId);
     const { error } = await db()
       .from("guest")
       .update({ rsvp_status: "pending", rsvp_count: 0, rsvp_at: null })
-      .eq("id", idSchema.parse(id));
+      .eq("id", idSchema.parse(id))
+      .eq("event_id", ev);
     if (error) throw new Error(error.message);
-    revalidatePath("/admin", "layout");
+    revalidateEventAdmin(ev);
   });
 }
 
 /* ---------- event / customize ---------- */
 
-const eventSchema = z.object({
-  groom: z.string().max(120),
-  bride: z.string().max(120),
+const eventSchema = eventMetaSchema.extend({
+  host_a: z.string().max(120),
+  host_b: z.string().max(120),
   event_date: z.string().nullable(),
   config: eventConfigSchema,
   text_kh: invitationTextSchema,
@@ -187,14 +305,20 @@ const eventSchema = z.object({
   sections: sectionsSchema,
 });
 
-export async function saveEvent(input: z.input<typeof eventSchema>) {
+export async function saveEvent(eventId: number, input: z.input<typeof eventSchema>) {
   return adminAction(async () => {
+    const ev = eventIdSchema.parse(eventId);
     const data = eventSchema.parse(input);
-    const { error } = await db()
+    const { error, count } = await db()
       .from("event")
-      .upsert({ id: 1, ...data, event_date: data.event_date || null, updated_at: new Date().toISOString() });
+      .update(
+        { ...data, event_date: data.event_date || null, updated_at: new Date().toISOString() },
+        { count: "exact" },
+      )
+      .eq("id", ev);
     if (error) throw new Error(error.message);
-    revalidateTag(EVENT_TAG);
+    if (!count) throw new Error("This event no longer exists");
+    revalidateTag(eventTag(ev));
     revalidatePath("/", "layout");
   });
 }
@@ -210,16 +334,17 @@ const agendaSchema = z
   .max(20);
 export type AgendaInput = z.input<typeof agendaSchema>;
 
-/** Replaces the whole agenda with the submitted one (days + items, in order), in one transaction. */
-export async function saveAgenda(input: AgendaInput) {
+/** Replaces the event's whole agenda with the submitted one (days + items, in order), in one transaction. */
+export async function saveAgenda(eventId: number, input: AgendaInput) {
   return adminAction(async () => {
+    const ev = eventIdSchema.parse(eventId);
     const days = agendaSchema.parse(input).map((d) => ({
       ...d,
       items: d.items.filter((it) => it.name.trim() || it.time.trim()),
     }));
-    const { error } = await db().rpc("save_agenda", { p_days: days });
+    const { error } = await db().rpc("save_agenda", { p_event_id: ev, p_days: days });
     if (error) throw new Error(error.message);
-    revalidateTag(EVENT_TAG);
+    revalidateTag(eventTag(ev));
     revalidatePath("/", "layout");
   });
 }
@@ -248,20 +373,22 @@ export async function createUpload(file: { name: string; type: string; size: num
 
 /* ---------- wishes ---------- */
 
-export async function setWishApproved(id: string, approved: boolean) {
+export async function setWishApproved(eventId: number, id: string, approved: boolean) {
   return adminAction(async () => {
-    const { error } = await db().from("wish").update({ approved }).eq("id", idSchema.parse(id));
+    const ev = eventIdSchema.parse(eventId);
+    const { error } = await db().from("wish").update({ approved }).eq("id", idSchema.parse(id)).eq("event_id", ev);
     if (error) throw new Error(error.message);
-    revalidateTag(WISHES_TAG);
+    revalidateTag(wishesTag(ev));
     revalidatePath("/", "layout");
   });
 }
 
-export async function deleteWish(id: string) {
+export async function deleteWish(eventId: number, id: string) {
   return adminAction(async () => {
-    const { error } = await db().from("wish").delete().eq("id", idSchema.parse(id));
+    const ev = eventIdSchema.parse(eventId);
+    const { error } = await db().from("wish").delete().eq("id", idSchema.parse(id)).eq("event_id", ev);
     if (error) throw new Error(error.message);
-    revalidateTag(WISHES_TAG);
+    revalidateTag(wishesTag(ev));
     revalidatePath("/", "layout");
   });
 }

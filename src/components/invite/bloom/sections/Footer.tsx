@@ -1,10 +1,11 @@
 import { Heart } from "lucide-react";
-import type { InvitationText } from "@/lib/types";
+import type { EventData, InvitationText } from "@/lib/types";
+import { Hosts } from "../../Hosts";
 import { GoldText, Tx, useBloom } from "../BloomContext";
 import { Flourish } from "../FlowerArt";
 import { Reveal } from "../Reveal";
 
-export function Footer({ text, groom, bride }: { text: InvitationText; groom: string; bride: string }) {
+export function Footer({ text, event }: { text: InvitationText; event: EventData }) {
   const { t } = useBloom();
   return (
     // Extra bottom padding keeps the last line clear of the dock.
@@ -28,7 +29,15 @@ export function Footer({ text, groom, bride }: { text: InvitationText; groom: st
       </Reveal>
       <Reveal variant="fadeUp" delay={0.2}>
         <p className="font-title text-base leading-[1.9] text-[var(--green)]">
-          {groom} <span className="bloom-gold px-1">&amp;</span> {bride}
+          <Hosts
+            event={event}
+            amp={
+              <>
+                {" "}
+                <span className="bloom-gold px-1">&amp;</span>{" "}
+              </>
+            }
+          />
         </p>
         <p className="mt-4 inline-flex items-center gap-1.5 text-xs text-[var(--green)]/70">
           <Heart size={12} className="fill-current" /> <Tx>{t.madeWith}</Tx>

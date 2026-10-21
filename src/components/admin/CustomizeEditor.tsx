@@ -4,8 +4,10 @@ import { ExternalLink, RotateCw, Smartphone } from "lucide-react";
 import { useState, useTransition } from "react";
 import { saveEvent } from "@/app/actions/admin";
 import { unwrap } from "@/lib/action-result";
+import { EVENT_TYPE_INFO } from "@/lib/event-types";
 import {
   EN_FONTS,
+  EVENT_TYPES,
   KH_FONTS,
   SECTION_KEYS,
   TEXT_FIELDS,
@@ -13,15 +15,17 @@ import {
   type Theme,
   type BloomConfig,
   type EventConfig,
+  type EventType,
   type EventData,
   type InvitationText,
   type ScheduleDay,
 } from "@/lib/types";
 import { AgendaEditor } from "./AgendaEditor";
 import { GalleryEditor, MediaUpload } from "./MediaUpload";
+import { PreviewThumb } from "./PreviewThumb";
 import { Button, Card, Field, Input, Select, Textarea, cx } from "./ui";
 
-const TABS = ["Couple & Date", "Text", "Agenda", "Theme", "Media", "Gift", "Sections"] as const;
+const TABS = ["Event & Date", "Text", "Agenda", "Theme", "Media", "Gift", "Sections"] as const;
 type Tab = (typeof TABS)[number];
 
 const TEXT_LABELS: Record<keyof InvitationText, string> = {
@@ -61,24 +65,14 @@ function fromLocalInput(value: string) {
   return value ? new Date(`${value}:00${EVENT_TZ_OFFSET}`).toISOString() : null;
 }
 
-const THEME_OPTIONS: { id: Theme; name: string; desc: string; swatch: string[] }[] = [
-  { id: "classic", name: "Classic", desc: "Soft cream and peach with floating petals", swatch: ["#fffaf2", "#f9af59", "#B08E4F"] },
-  {
-    id: "angkor",
-    name: "Angkor temple",
-    desc: "Sandstone and gold: Angkor Wat skyline, naga arch, lotus and kbach ornament",
-    swatch: ["#f4ead6", "#b7862f", "#6b4a2b"],
-  },
-  {
-    id: "bloom",
-    name: "Bloom",
-    desc: "Watercolor florals and gold lettering, with an animated arch intro and scroll reveals",
-    swatch: ["#fdf2f5", "#eab308", "#43652F"],
-  },
+const THEME_OPTIONS: { id: Theme; name: string; desc: string }[] = [
+  { id: "classic", name: "Classic", desc: "Soft cream and peach with floating petals" },
+  { id: "angkor", name: "Angkor temple", desc: "Sandstone and gold: Angkor Wat skyline, naga arch, lotus and kbach ornament" },
+  { id: "bloom", name: "Bloom", desc: "Watercolor florals and gold lettering, with an animated arch intro and scroll reveals" },
 ];
 
 export function CustomizeEditor({ initial, agenda }: { initial: EventData; agenda: ScheduleDay[] }) {
-  const [tab, setTab] = useState<Tab>("Couple & Date");
+  const [tab, setTab] = useState<Tab>("Event & Date");
   const [data, setData] = useState(initial);
   const [lang, setLang] = useState<"kh" | "en">("kh");
   const [dirty, setDirty] = useState(false);
@@ -94,6 +88,7 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
   const cfg = <K extends keyof EventConfig>(k: K, v: EventConfig[K]) => patch({ config: { ...data.config, [k]: v } });
   const bcfg = <K extends keyof BloomConfig>(k: K, v: BloomConfig[K]) => cfg("bloom", { ...data.config.bloom, [k]: v });
   const bloom = data.config.theme === "bloom";
+  const typeInfo = EVENT_TYPE_INFO[data.type];
   // Picking a style also applies its colours/script font; they can still be fine-tuned below.
   const pickTheme = (theme: Theme) => patch({ config: { ...data.config, theme, ...THEME_PRESETS[theme] } });
   const txtKey = lang === "kh" ? "text_kh" : "text_en";
@@ -102,7 +97,7 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
   const save = () =>
     start(async () => {
       try {
-        unwrap(await saveEvent(data));
+        unwrap(await saveEvent(data.id, data));
         setDirty(false);
         setMsg("Saved ✓");
         setPreviewKey((k) => k + 1);
@@ -115,11 +110,11 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
     <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
       <div className="min-w-0 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h1 className="text-2xl font-semibold">Customize invitation</h1>
+          <h2 className="text-xl font-semibold">Customize invitation</h2>
           {tab !== "Agenda" && (
             <div className="flex items-center gap-3">
               {msg && <span className="text-sm text-neutral-500">{msg}</span>}
-              <Button onClick={save} disabled={!dirty || pending}>
+              <Button onClick={save} disabled={!dirty} loading={pending}>
                 {pending ? "Saving…" : dirty ? "Save changes" : "Saved"}
               </Button>
             </div>
@@ -141,15 +136,31 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
           ))}
         </div>
 
-        {tab === "Couple & Date" && (
+        {tab === "Event & Date" && (
           <Card className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Groom name">
-                <Input value={data.groom} onChange={(e) => patch({ groom: e.target.value })} />
+              <Field label="Event name" hint="Only shown in the admin.">
+                <Input value={data.name} onChange={(e) => patch({ name: e.target.value })} />
               </Field>
-              <Field label="Bride name">
-                <Input value={data.bride} onChange={(e) => patch({ bride: e.target.value })} />
+              <Field label="Event type" hint="Changes the host fields, link-preview title and a few guest-page labels.">
+                <Select value={data.type} onChange={(e) => patch({ type: e.target.value as EventType })}>
+                  {EVENT_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {EVENT_TYPE_INFO[t].label}
+                    </option>
+                  ))}
+                </Select>
               </Field>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label={`${typeInfo.hostLabels[0]} name`}>
+                <Input value={data.host_a} onChange={(e) => patch({ host_a: e.target.value })} />
+              </Field>
+              {typeInfo.pair && (
+                <Field label={`${typeInfo.hostLabels[1]} name`}>
+                  <Input value={data.host_b} onChange={(e) => patch({ host_b: e.target.value })} />
+                </Field>
+              )}
             </div>
             <Field label="Event date & time (Cambodia time)" hint="Used for the countdown. The displayed date text is edited in the Text tab.">
               <Input
@@ -186,14 +197,14 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
           </Card>
         )}
 
-        {tab === "Agenda" && <AgendaEditor initial={agenda} onSaved={() => setPreviewKey((k) => k + 1)} />}
+        {tab === "Agenda" && <AgendaEditor eventId={data.id} initial={agenda} onSaved={() => setPreviewKey((k) => k + 1)} />}
 
         {tab === "Theme" && (
           <Card className="space-y-5">
             {/* Not a <Field>: that is a <label>, which would forward stray clicks to the first button. */}
             <div className="space-y-1.5" role="group" aria-label="Style">
               <span className="text-sm font-medium text-neutral-700">Style</span>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {THEME_OPTIONS.map((o) => (
                   <button
                     key={o.id}
@@ -201,23 +212,21 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
                     aria-pressed={data.config.theme === o.id}
                     onClick={() => pickTheme(o.id)}
                     className={cx(
-                      "flex items-center gap-3 rounded-xl border p-3 text-left transition",
+                      "flex flex-col gap-2 rounded-xl border p-2 text-left transition",
                       data.config.theme === o.id ? "border-rose-600 ring-2 ring-rose-200" : "border-neutral-200 hover:border-neutral-400",
                     )}
                   >
-                    <span className="flex shrink-0 overflow-hidden rounded-lg border border-neutral-200">
-                      {o.swatch.map((col) => (
-                        <span key={col} className="h-10 w-4" style={{ background: col }} />
-                      ))}
-                    </span>
-                    <span>
+                    <PreviewThumb key={previewKey} eventId={data.id} theme={o.id} className="mx-auto" />
+                    <span className="px-1 pb-1">
                       <span className="block text-sm font-medium">{o.name}</span>
                       <span className="block text-xs text-neutral-500">{o.desc}</span>
                     </span>
                   </button>
                 ))}
               </div>
-              <span className="block text-xs text-neutral-500">Choosing a style also sets matching colours and English font. You can adjust them afterwards.</span>
+              <span className="block text-xs text-neutral-500">
+                Choosing a style also sets matching colours and English font. You can adjust them afterwards. Previews show your saved content.
+              </span>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <ColorField label="Primary color" value={data.config.primaryColor} onChange={(v) => cfg("primaryColor", v)} />
@@ -323,13 +332,13 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
             <Button size="sm" variant="ghost" onClick={() => setPreviewKey((k) => k + 1)} title="Reload">
               <RotateCw size={14} />
             </Button>
-            <a href="/admin/preview" target="_blank" className="inline-flex h-8 items-center rounded-lg px-2.5 hover:bg-neutral-100" title="Open in new tab">
+            <a href={`/admin/preview/${data.id}`} target="_blank" className="inline-flex h-8 items-center rounded-lg px-2.5 hover:bg-neutral-100" title="Open in new tab">
               <ExternalLink size={14} />
             </a>
           </div>
         </div>
         <div className="mx-auto h-[760px] max-h-[80dvh] w-full max-w-[390px] overflow-hidden rounded-[2rem] border-8 border-neutral-900 bg-neutral-900 shadow-xl">
-          <iframe key={previewKey} src="/admin/preview" className="h-full w-full rounded-[1.5rem] bg-white" title="Invitation preview" />
+          <iframe key={previewKey} src={`/admin/preview/${data.id}`} className="h-full w-full rounded-[1.5rem] bg-white" title="Invitation preview" />
         </div>
       </div>
     </div>

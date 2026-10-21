@@ -160,23 +160,32 @@ export function Flourish({ className }: { className?: string }) {
   );
 }
 
-/** Default monogram: the couple's initials in a double gold ring. */
-export function Monogram({ a, b, className }: { a: string; b: string; className?: string }) {
+/** Default monogram: the couple's initials (or a single host's) in a double gold ring. */
+export function Monogram({ a, b, className }: { a: string; b?: string; className?: string }) {
   return (
-    <svg viewBox="0 0 120 120" className={className} role="img" aria-label={`${a} & ${b}`}>
+    <svg viewBox="0 0 120 120" className={className} role="img" aria-label={b ? `${a} & ${b}` : a}>
       <g fill="none" stroke="var(--gold-to)">
         <circle cx="60" cy="60" r="56" strokeWidth="1.5" />
         <circle cx="60" cy="60" r="50" strokeWidth=".7" />
       </g>
-      <text x="34" y="70" textAnchor="middle" fontSize="26" fill="var(--gold-to)" style={{ fontFamily: "var(--font-title), serif" }}>
-        {a}
-      </text>
-      <text x="60" y="67" textAnchor="middle" fontSize="16" fill="var(--gold-from)" style={{ fontFamily: '"Cormorant Garamond", serif' }}>
-        &amp;
-      </text>
-      <text x="86" y="70" textAnchor="middle" fontSize="26" fill="var(--gold-to)" style={{ fontFamily: "var(--font-title), serif" }}>
-        {b}
-      </text>
+      {!b && (
+        <text x="60" y="72" textAnchor="middle" fontSize="34" fill="var(--gold-to)" style={{ fontFamily: "var(--font-title), serif" }}>
+          {a}
+        </text>
+      )}
+      {b && (
+        <>
+          <text x="34" y="70" textAnchor="middle" fontSize="26" fill="var(--gold-to)" style={{ fontFamily: "var(--font-title), serif" }}>
+            {a}
+          </text>
+          <text x="60" y="67" textAnchor="middle" fontSize="16" fill="var(--gold-from)" style={{ fontFamily: '"Cormorant Garamond", serif' }}>
+            &amp;
+          </text>
+          <text x="86" y="70" textAnchor="middle" fontSize="26" fill="var(--gold-to)" style={{ fontFamily: "var(--font-title), serif" }}>
+            {b}
+          </text>
+        </>
+      )}
     </svg>
   );
 }

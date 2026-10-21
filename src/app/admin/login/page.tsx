@@ -14,7 +14,7 @@ export default function LoginPage() {
         <form action={action} className="space-y-3">
           <Input name="password" type="password" placeholder="Password" autoFocus required />
           {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
-          <Button className="w-full" disabled={pending}>
+          <Button className="w-full" loading={pending}>
             {pending ? "Signing in…" : "Sign in"}
           </Button>
         </form>

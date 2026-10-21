@@ -19,7 +19,7 @@ import { Badge, Button, Card, Field, Input, Modal, Select, Textarea } from "./ui
 
 type Filter = { q: string; group: string; rsvp: string; opened: string };
 
-export function GuestManager({ guests, siteUrl }: { guests: Guest[]; siteUrl: string }) {
+export function GuestManager({ eventId, guests, siteUrl }: { eventId: number; guests: Guest[]; siteUrl: string }) {
   const [filter, setFilter] = useState<Filter>({ q: "", group: "", rsvp: "", opened: "" });
   const [editing, setEditing] = useState<Guest | "new" | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -80,7 +80,7 @@ export function GuestManager({ guests, siteUrl }: { guests: Guest[]; siteUrl: st
   const removeSelected = () => {
     if (!selected.size || !confirm(`Delete ${selected.size} guest(s)? Their RSVPs and wishes will be deleted too.`)) return;
     start(async () => {
-      const res = await deleteGuests([...selected]);
+      const res = await deleteGuests(eventId, [...selected]);
       if (res.ok) setSelected(new Set());
       else alert(res.error);
     });
@@ -91,9 +91,9 @@ export function GuestManager({ guests, siteUrl }: { guests: Guest[]; siteUrl: st
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">
+        <h2 className="text-xl font-semibold">
           Guests <span className="text-base font-normal text-neutral-400">({guests.length})</span>
-        </h1>
+        </h2>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={exportCsv}>
             <Download size={16} /> Export
@@ -133,8 +133,8 @@ export function GuestManager({ guests, siteUrl }: { guests: Guest[]; siteUrl: st
       {selected.size > 0 && (
         <div className="flex items-center gap-3 rounded-lg bg-rose-50 px-4 py-2 text-sm">
           <span>{selected.size} selected</span>
-          <Button size="sm" variant="danger" onClick={removeSelected} disabled={pending}>
-            <Trash2 size={14} /> Delete
+          <Button size="sm" variant="danger" onClick={removeSelected} loading={pending}>
+            {!pending && <Trash2 size={14} />} Delete
           </Button>
           <button className="text-neutral-500 hover:underline" onClick={() => setSelected(new Set())}>
             Clear
@@ -244,14 +244,14 @@ export function GuestManager({ guests, siteUrl }: { guests: Guest[]; siteUrl: st
         </div>
       </Card>
 
-      {editing && <GuestForm guest={editing === "new" ? null : editing} groups={groups} onClose={() => setEditing(null)} />}
-      {bulkOpen && <BulkImport onClose={() => setBulkOpen(false)} />}
+      {editing && <GuestForm eventId={eventId} guest={editing === "new" ? null : editing} groups={groups} onClose={() => setEditing(null)} />}
+      {bulkOpen && <BulkImport eventId={eventId} onClose={() => setBulkOpen(false)} />}
       {qrFor && <QrModal guest={qrFor} link={linkFor(qrFor)} onClose={() => setQrFor(null)} />}
     </div>
   );
 }
 
-function GuestForm({ guest, groups, onClose }: { guest: Guest | null; groups: string[]; onClose: () => void }) {
+function GuestForm({ eventId, guest, groups, onClose }: { eventId: number; guest: Guest | null; groups: string[]; onClose: () => void }) {
   const [form, setForm] = useState<GuestInput>({
     name: guest?.name ?? "",
     phone: guest?.phone ?? "",
@@ -261,11 +261,14 @@ function GuestForm({ guest, groups, onClose }: { guest: Guest | null; groups: st
   });
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
+  // Which button started the running action, so only that one spins.
+  const [busy, setBusy] = useState<"save" | "link" | "reset" | "delete" | null>(null);
   const set = (k: keyof GuestInput) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value });
 
-  const run = (fn: () => ReturnType<typeof createGuest>, close = true) =>
+  const run = (which: NonNullable<typeof busy>, fn: () => ReturnType<typeof createGuest>, close = true) =>
     start(async () => {
+      setBusy(which);
       try {
         unwrap(await fn());
         if (close) onClose();
@@ -280,7 +283,7 @@ function GuestForm({ guest, groups, onClose }: { guest: Guest | null; groups: st
         className="space-y-3"
         onSubmit={(e) => {
           e.preventDefault();
-          run(() => (guest ? updateGuest(guest.id, form) : createGuest(form)));
+          run("save", () => (guest ? updateGuest(eventId, guest.id, form) : createGuest(eventId, form)));
         }}
       >
         <Field label="Name (shown on the invitation)">
@@ -317,12 +320,20 @@ function GuestForm({ guest, groups, onClose }: { guest: Guest | null; groups: st
               size="sm"
               variant="outline"
               disabled={pending}
-              onClick={() => confirm("Generate a new link? The old link will stop working.") && run(() => regenerateGuestCode(guest.id))}
+              loading={pending && busy === "link"}
+              onClick={() => confirm("Generate a new link? The old link will stop working.") && run("link", () => regenerateGuestCode(eventId, guest.id))}
             >
-              <RefreshCw size={14} /> New link
+              {!(pending && busy === "link") && <RefreshCw size={14} />} New link
             </Button>
             {guest.rsvp_status !== "pending" && (
-              <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => run(() => resetGuestRsvp(guest.id))}>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={pending}
+                loading={pending && busy === "reset"}
+                onClick={() => run("reset", () => resetGuestRsvp(eventId, guest.id))}
+              >
                 Reset RSVP
               </Button>
             )}
@@ -332,9 +343,10 @@ function GuestForm({ guest, groups, onClose }: { guest: Guest | null; groups: st
               variant="outline"
               className="text-red-600"
               disabled={pending}
-              onClick={() => confirm(`Delete ${guest.name}?`) && run(() => deleteGuests([guest.id]))}
+              loading={pending && busy === "delete"}
+              onClick={() => confirm(`Delete ${guest.name}?`) && run("delete", () => deleteGuests(eventId, [guest.id]))}
             >
-              <Trash2 size={14} /> Delete
+              {!(pending && busy === "delete") && <Trash2 size={14} />} Delete
             </Button>
           </div>
         )}
@@ -343,14 +355,16 @@ function GuestForm({ guest, groups, onClose }: { guest: Guest | null; groups: st
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button disabled={pending}>{pending ? "Saving…" : "Save"}</Button>
+          <Button disabled={pending} loading={pending && busy === "save"}>
+            {pending && busy === "save" ? "Saving…" : "Save"}
+          </Button>
         </div>
       </form>
     </Modal>
   );
 }
 
-function BulkImport({ onClose }: { onClose: () => void }) {
+function BulkImport({ eventId, onClose }: { eventId: number; onClose: () => void }) {
   const [text, setText] = useState("");
   const [group, setGroup] = useState("");
   const [error, setError] = useState("");
@@ -405,11 +419,12 @@ function BulkImport({ onClose }: { onClose: () => void }) {
               Cancel
             </Button>
             <Button
-              disabled={pending || rows.length === 0}
+              disabled={rows.length === 0}
+              loading={pending}
               onClick={() =>
                 start(async () => {
                   try {
-                    unwrap(await bulkCreateGuests(rows));
+                    unwrap(await bulkCreateGuests(eventId, rows));
                     onClose();
                   } catch (e) {
                     setError(e instanceof Error ? e.message : "Failed");

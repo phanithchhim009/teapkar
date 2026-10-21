@@ -9,7 +9,8 @@ import type { EventData, ScheduleDay } from "@/lib/types";
 import { AngkorSkyline, Lotus, LotusBud, NagaArch } from "./angkor/Ornaments";
 import { BloomInvitation } from "./bloom/BloomInvitation";
 import { Countdown } from "./Countdown";
-import { labels, type Lang } from "./i18n";
+import { Hosts } from "./Hosts";
+import { labelsFor, type Lang } from "./i18n";
 import { Lightbox } from "./Lightbox";
 import { unoptimized } from "./media";
 import { Reveal, SectionTitle } from "./Reveal";
@@ -53,7 +54,7 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
   const audio = useRef<HTMLAudioElement>(null);
   const tracked = useRef(false);
 
-  const t = labels[lang];
+  const t = labelsFor(lang, event.type);
   const text = lang === "kh" ? event.text_kh : event.text_en;
 
   useEffect(() => {
@@ -127,11 +128,14 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
                     <p className="font-title absolute inset-x-[19%] bottom-[20%] text-base leading-relaxed">{text.main_title}</p>
                   </div>
                   <p className="font-title mt-3 text-2xl leading-loose">
-                    {event.groom}
-                    <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
-                      &amp;
-                    </span>
-                    {event.bride}
+                    <Hosts
+                      event={event}
+                      amp={
+                        <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
+                          &amp;
+                        </span>
+                      }
+                    />
                   </p>
                 </div>
               ) : (
@@ -140,11 +144,14 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
                     {text.main_title}
                   </p>
                   <p className="font-title text-2xl leading-loose">
-                    {event.groom}
-                    <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
-                      &amp;
-                    </span>
-                    {event.bride}
+                    <Hosts
+                      event={event}
+                      amp={
+                        <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
+                          &amp;
+                        </span>
+                      }
+                    />
                   </p>
                 </div>
               )}
@@ -218,11 +225,14 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
               </p>
             )}
             <p className="font-title text-xl leading-loose">
-              {event.groom}
-              <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
-                &amp;
-              </span>
-              {event.bride}
+              <Hosts
+                event={event}
+                amp={
+                  <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
+                    &amp;
+                  </span>
+                }
+              />
             </p>
             <div className="divider mx-auto w-48" />
             <p className="text-sm">{text.subtitle}</p>
@@ -407,7 +417,17 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
             <p className="whitespace-pre-line text-sm leading-7">{text.gratitude_message}</p>
             <div className="divider" />
             <p className="font-title text-lg leading-loose">
-              {event.groom} <span className="font-script text-2xl" style={{ color: "var(--primary)" }}>&amp;</span> {event.bride}
+              <Hosts
+                event={event}
+                amp={
+                  <>
+                    {" "}
+                    <span className="font-script text-2xl" style={{ color: "var(--primary)" }}>
+                      &amp;
+                    </span>{" "}
+                  </>
+                }
+              />
             </p>
           </Reveal>
           {angkor && (

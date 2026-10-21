@@ -3,7 +3,7 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/supabase/server";
-import { getGuestByCode, WISHES_TAG } from "@/lib/event";
+import { getGuestByCode, wishesTag } from "@/lib/event";
 
 // Also enforced by the wish_limit trigger (supabase/migrations/0002_hardening.sql); keep the two in sync.
 const MAX_WISHES_PER_GUEST = 5;
@@ -35,7 +35,8 @@ export async function submitRsvp(input: z.input<typeof rsvpSchema>) {
     )
     .eq("code", code);
   if (error || !updated) return { ok: false as const, error: "not_found" };
-  revalidatePath("/admin");
+  // Refreshes the events list and every event's dashboard; the guest's event isn't known here without another read.
+  revalidatePath("/admin", "layout");
   return { ok: true as const };
 }
 
@@ -55,13 +56,13 @@ export async function submitWish(input: z.input<typeof wishSchema>) {
 
   const { data, error } = await db()
     .from("wish")
-    .insert({ guest_id: guest.id, message: parsed.data.message })
+    .insert({ guest_id: guest.id, event_id: guest.event_id, message: parsed.data.message })
     .select("id, message, created_at")
     .single();
   // The cheap count above handles the normal case; the trigger catches concurrent submissions.
   if (error?.message === "wish_limit") return { ok: false as const, error: "limit" };
   if (error) return { ok: false as const, error: "failed" };
-  revalidateTag(WISHES_TAG);
+  revalidateTag(wishesTag(guest.event_id));
   revalidatePath(`/i/${guest.code}`);
   return { ok: true as const, wish: { ...data, name: guest.name } };
 }

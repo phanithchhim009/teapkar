@@ -1,16 +1,24 @@
+import { Loader2 } from "lucide-react";
 import { forwardRef } from "react";
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
-type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "outline" | "ghost" | "danger"; size?: "sm" | "md" };
+type BtnProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "primary" | "outline" | "ghost" | "danger";
+  size?: "sm" | "md";
+  /** Shows a spinner and disables the button while an action runs. */
+  loading?: boolean;
+};
 
 export const Button = forwardRef<HTMLButtonElement, BtnProps>(function Button(
-  { variant = "primary", size = "md", className, ...props },
+  { variant = "primary", size = "md", loading = false, className, disabled, children, ...props },
   ref,
 ) {
   return (
     <button
       ref={ref}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
       className={cx(
         "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
         size === "sm" ? "h-8 px-2.5 text-xs" : "h-10 px-4 text-sm",
@@ -21,7 +29,10 @@ export const Button = forwardRef<HTMLButtonElement, BtnProps>(function Button(
         className,
       )}
       {...props}
-    />
+    >
+      {loading && <Loader2 size={size === "sm" ? 14 : 16} className="shrink-0 animate-spin" />}
+      {children}
+    </button>
   );
 });
 

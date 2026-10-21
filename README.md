@@ -1,6 +1,6 @@
 # Teabkar Digital — ធៀបការឌីជីថល
 
-A personal digital wedding invitation. Each guest gets a unique link (`/i/<code>`) that greets them by name. One admin dashboard manages guests, RSVPs, and wishes, and lets you customize the invitation.
+Digital invitations for weddings, engagements, birthdays, housewarmings and other events. One admin manages many events; each event has its own design, agenda, guests, RSVPs and wishes. Each guest gets a unique link (`/i/<code>`) that opens their event's invitation and greets them by name.
 
 **Stack:** Next.js 15 (App Router) · Tailwind CSS v4 · Supabase (Postgres + Storage) · Framer Motion
 
@@ -10,13 +10,15 @@ A personal digital wedding invitation. Each guest gets a unique link (`/i/<code>
 - Envelope-style cover with the guest's name, then an open animation and background music
 - Invitation text, countdown, agenda (multiple days), photo gallery with lightbox, map, RSVP, wishes, KHQR gift, and gratitude
 - Khmer / English switch (defaults to the guest's language; `?lang=en` overrides it)
-- Per-guest share preview (title "អាពាហ៍ពិពាហ៍ …", description "សូមគោរពអញ្ជើញ {name}", cover image)
+- Per-guest share preview (title by event type, e.g. "អាពាហ៍ពិពាហ៍ …" or "ខួបកំណើត …"; description "សូមគោរពអញ្ជើញ {name}"; cover image)
 - Unknown code → 404
 
 **Admin** `/admin` (one password)
+- **Events**: list with guest/RSVP totals; create (type, name, hosts, date), duplicate an event's design and agenda, or delete an event with its guests
+- Each event (`/admin/events/<id>`) has the tabs below
 - **Dashboard**: guests, opened, attending/declined/pending, total attendees, recent opens, latest wishes
 - **Guests**: add, edit, delete, bulk paste or CSV import, search and filters, copy link, share to Telegram, download QR code, export CSV, regenerate link, reset RSVP
-- **Customize**: couple and date, KH/EN text, agenda, theme (colors, Khmer/English fonts, size, radius), media uploads (backgrounds, gallery, music, map), gift (KHQR USD/KHR plus account), section toggles, live phone preview
+- **Customize**: event name/type, hosts and date, KH/EN text, agenda, theme (colors, Khmer/English fonts, size, radius), media uploads (backgrounds, gallery, music, map), gift (KHQR USD/KHR plus account), section toggles, live phone preview
 - **Wishes**: hide/show or delete
 
 ## Local development
@@ -38,7 +40,7 @@ npm run dev
 ## Deploy (Supabase Cloud + Vercel)
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. In **SQL Editor**, run `supabase/migrations/0001_init.sql` and `0002_hardening.sql` (in that order), then `supabase/seed.sql` for the default content. Delete the `demo2026` guest afterwards. You can also run `supabase link && supabase db push`.
+2. In **SQL Editor**, run the files in `supabase/migrations/` in order (`0001` → `0004`), then `supabase/seed.sql` for the default content. Delete the `demo2026` guest afterwards. You can also run `supabase link && supabase db push`.
 3. Push this repo to GitHub and import it into [Vercel](https://vercel.com).
 4. Set these environment variables in Vercel:
 
@@ -84,6 +86,10 @@ Code lives in `src/components/invite/bloom/`. `Invitation.tsx` hands off to `Blo
 
 Video uploads need `supabase/migrations/0003_bloom_video.sql`, which lets the media bucket accept `video/mp4` and `video/webm`.
 
+## Upgrading to multiple events
+
+`supabase/migrations/0004_multi_event.sql` turns the single event into event `1` and gives guests, agenda days and wishes an `event_id`, so existing guest links keep working. It also renames `groom`/`bride` to `host_a`/`host_b` and replaces `save_agenda(jsonb)` with `save_agenda(event_id, jsonb)`. Run it in the SQL Editor (or `supabase db push`) **before** deploying this version of the app.
+
 ## Security notes
 
 - Every database read and write goes through server code using the service-role key. RLS is enabled with no public policies, so the anon key gives no access.
@@ -97,11 +103,11 @@ Video uploads need `supabase/migrations/0003_bloom_video.sql`, which lets the me
 ```
 src/app/i/[code]/          guest invitation page
 src/app/admin/login/       admin login
-src/app/admin/(panel)/     dashboard, guests, customize, wishes
-src/app/admin/preview/     admin-only preview with a sample guest
+src/app/admin/(panel)/     events list, new event, events/[eventId]/ (dashboard, guests, customize, wishes)
+src/app/admin/preview/     admin-only preview of an event with a sample guest
 src/app/actions/           server actions (guest.ts = public, admin.ts = guarded)
 src/components/invite/     invitation sections
 src/components/admin/      admin UI
 src/lib/                   supabase client, auth/session, types (zod), data loaders
-supabase/                  migration + seed
+supabase/                  migrations + seed
 ```

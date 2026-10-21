@@ -42,11 +42,16 @@ export function MediaUpload({
         <button
           type="button"
           onClick={() => input.current?.click()}
-          className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-neutral-400 hover:border-rose-400"
+          disabled={busy}
+          aria-busy={busy || undefined}
+          className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-neutral-400 hover:border-rose-400 disabled:cursor-wait"
         >
-          {busy ? (
-            <Loader2 className="animate-spin" size={20} />
-          ) : value && kind === "image" ? (
+          {busy && (
+            <span className="absolute inset-0 z-10 flex items-center justify-center bg-white/70">
+              <Loader2 className="animate-spin text-rose-600" size={22} />
+            </span>
+          )}
+          {value && kind === "image" ? (
             <img src={value} alt="" className="h-full w-full object-cover" />
           ) : kind === "audio" ? (
             <Music size={20} className={value ? "text-rose-500" : ""} />
@@ -57,14 +62,20 @@ export function MediaUpload({
           )}
         </button>
         <div className="min-w-0 flex-1 space-y-1">
+          {busy && (
+            <p className="flex items-center gap-1.5 text-xs font-medium text-rose-600">
+              <Loader2 size={12} className="animate-spin" /> Uploading…
+            </p>
+          )}
           {kind === "audio" && value && <audio src={value} controls className="h-8 w-full" />}
           <input
-            className="h-8 w-full rounded-md border border-neutral-200 px-2 text-xs text-neutral-600"
+            disabled={busy}
+            className="h-8 w-full rounded-md border border-neutral-200 px-2 text-xs text-neutral-600 disabled:bg-neutral-50"
             placeholder="…or paste a URL"
             value={value}
             onChange={(e) => onChange(e.target.value)}
           />
-          {value && (
+          {value && !busy && (
             <button type="button" className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-red-600" onClick={() => onChange("")}>
               <X size={12} /> Remove
             </button>
@@ -132,9 +143,18 @@ export function GalleryEditor({ value, onChange }: { value: string[]; onChange: 
         <button
           type="button"
           onClick={() => input.current?.click()}
-          className="flex aspect-square items-center justify-center rounded-lg border border-dashed border-neutral-300 text-neutral-400 hover:border-rose-400"
+          disabled={busy > 0}
+          aria-busy={busy > 0 || undefined}
+          className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-neutral-300 text-neutral-400 hover:border-rose-400 disabled:cursor-wait disabled:border-rose-300 disabled:bg-rose-50/50"
         >
-          {busy ? <Loader2 className="animate-spin" size={20} /> : <ImagePlus size={20} />}
+          {busy ? (
+            <>
+              <Loader2 className="animate-spin text-rose-600" size={20} />
+              <span className="text-xs font-medium text-rose-600">Uploading {busy}…</span>
+            </>
+          ) : (
+            <ImagePlus size={20} />
+          )}
         </button>
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}

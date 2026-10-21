@@ -19,7 +19,7 @@ function swap<T>(arr: T[], i: number, j: number) {
   return next;
 }
 
-export function AgendaEditor({ initial, onSaved }: { initial: ScheduleDay[]; onSaved: () => void }) {
+export function AgendaEditor({ eventId, initial, onSaved }: { eventId: number; initial: ScheduleDay[]; onSaved: () => void }) {
   const [days, setDays] = useState<Day[]>(() =>
     initial.map((d) => ({
       key: d.id,
@@ -98,11 +98,12 @@ export function AgendaEditor({ initial, onSaved }: { initial: ScheduleDay[]; onS
           {msg && <span className="text-sm text-neutral-500">{msg}</span>}
           <Button
             type="button"
-            disabled={!dirty || pending}
+            disabled={!dirty}
+            loading={pending}
             onClick={() =>
               start(async () => {
                 try {
-                  unwrap(await saveAgenda(days.map((d) => ({ title: d.title, date: d.date || null, items: d.items.map(({ time, name }) => ({ time, name })) }))));
+                  unwrap(await saveAgenda(eventId, days.map((d) => ({ title: d.title, date: d.date || null, items: d.items.map(({ time, name }) => ({ time, name })) }))));
                   setDirty(false);
                   setMsg("Saved ✓");
                   onSaved();

@@ -6,6 +6,7 @@ import { GoldText, Tx, useBloom } from "../BloomContext";
 import { BloomCountdown } from "../Countdown";
 import { Flourish } from "../FlowerArt";
 import { Reveal } from "../Reveal";
+import { Hosts } from "../../Hosts";
 import { unoptimized } from "../../media";
 
 type Props = { event: EventData; text: InvitationText; hero: string; guestName: string };
@@ -28,7 +29,15 @@ export function MainSection({ event, text, hero, guestName }: Props) {
         </Reveal>
         <Reveal variant="fadeUp" delay={0.12}>
           <p className="font-title mt-2 text-lg leading-[1.9] text-[var(--green)]">
-            {event.groom} <span className="bloom-gold px-1">&amp;</span> {event.bride}
+            <Hosts
+            event={event}
+            amp={
+              <>
+                {" "}
+                <span className="bloom-gold px-1">&amp;</span>{" "}
+              </>
+            }
+          />
           </p>
         </Reveal>
         <Reveal variant="grow" delay={0.2} className="mx-auto my-3 w-40">

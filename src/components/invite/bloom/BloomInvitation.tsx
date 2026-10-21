@@ -4,9 +4,10 @@ import { AnimatePresence, MotionConfig, useReducedMotion } from "framer-motion";
 import { Camera, CalendarDays, Home, MapPin, MessageCircle, QrCode } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { trackOpen } from "@/app/actions/guest";
+import { eventHosts, hostsLabel } from "@/lib/event-types";
 import type { EventData, ScheduleDay } from "@/lib/types";
 import type { InviteGuest } from "../Invitation";
-import { labels, type Lang } from "../i18n";
+import { labelsFor, type Lang } from "../i18n";
 import { Lightbox } from "../Lightbox";
 import type { PublicWish } from "../Wishes";
 import { coverExitLead } from "./animations/variants";
@@ -61,7 +62,7 @@ export function BloomInvitation({ event, agenda, guest, wishes, initialLang, pre
   const scrollRef = useRef<HTMLDivElement>(null);
   const tracked = useRef(false);
 
-  const t = labels[lang];
+  const t = labelsFor(lang, event.type);
   const text = lang === "kh" ? event.text_kh : event.text_en;
   const hero = b.heroPhoto || c.mainBackground || c.gallery[0] || "";
   const playIntro = b.intro && !reduced;
@@ -113,10 +114,11 @@ export function BloomInvitation({ event, agenda, guest, wishes, initialLang, pre
   };
   const toggleLang = () => setLang((l) => (l === "kh" ? "en" : "kh"));
 
+  const hosts = eventHosts(event);
   const monogram = b.monogram ? (
-    <img src={b.monogram} alt={`${event.groom} & ${event.bride}`} className="h-auto w-full" />
+    <img src={b.monogram} alt={hostsLabel(event)} className="h-auto w-full" />
   ) : (
-    <Monogram a={firstChar(event.groom)} b={firstChar(event.bride)} className="h-auto w-full" />
+    <Monogram a={firstChar(hosts[0])} b={hosts[1] && firstChar(hosts[1])} className="h-auto w-full" />
   );
 
   const showSchedule = sections.agenda && agenda.length > 0;
@@ -180,7 +182,7 @@ export function BloomInvitation({ event, agenda, guest, wishes, initialLang, pre
                     rsvp={sections.rsvp ? { status: guest.rsvp_status, count: guest.rsvp_count } : null}
                   />
                 )}
-                <Footer text={text} groom={event.groom} bride={event.bride} />
+                <Footer text={text} event={event} />
               </div>
             )}
 

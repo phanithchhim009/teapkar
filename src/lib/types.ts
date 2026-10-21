@@ -3,6 +3,10 @@ import { z } from "zod";
 export const THEMES = ["classic", "angkor", "bloom"] as const;
 export type Theme = (typeof THEMES)[number];
 
+// Keep in sync with the event.type check (supabase/migrations/0004_multi_event.sql).
+export const EVENT_TYPES = ["wedding", "engagement", "birthday", "housewarming", "other"] as const;
+export type EventType = (typeof EVENT_TYPES)[number];
+
 type ThemePreset = { primaryColor: string; textColor: string; guestNameColor: string; fontEn: string; fontKh?: string; fontBodyKh?: string };
 
 /** Colours and fonts applied when a theme is picked in the admin; they stay editable afterwards. */
@@ -97,8 +101,13 @@ export type Sections = z.infer<typeof sectionsSchema>;
 export const SECTION_KEYS = Object.keys(sectionsSchema.shape) as (keyof Sections)[];
 
 export type EventData = {
-  groom: string;
-  bride: string;
+  id: number;
+  type: EventType;
+  name: string;
+  /** The first (or only) host; for weddings, the groom. */
+  host_a: string;
+  /** The second host for paired types (the bride); blank otherwise. */
+  host_b: string;
   event_date: string | null;
   config: EventConfig;
   text_kh: InvitationText;
@@ -106,11 +115,27 @@ export type EventData = {
   sections: Sections;
 };
 
+export type EventSummary = {
+  id: number;
+  name: string;
+  type: EventType;
+  host_a: string;
+  host_b: string;
+  event_date: string | null;
+  created_at: string;
+  guests: number;
+  opened: number;
+  rsvp_yes: number;
+  rsvp_no: number;
+  attending: number;
+};
+
 export type TimelineItem = { id: string; day_id: string; time: string; name: string; sort: number };
 export type ScheduleDay = { id: string; title: string; date: string | null; sort: number; items: TimelineItem[] };
 
 export type Guest = {
   id: string;
+  event_id: number;
   code: string;
   name: string;
   phone: string | null;
@@ -127,6 +152,7 @@ export type Guest = {
 
 export type Wish = {
   id: string;
+  event_id: number;
   guest_id: string;
   message: string;
   approved: boolean;
