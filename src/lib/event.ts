@@ -17,8 +17,12 @@ export const eventTag = (eventId: number) => `event:${eventId}`;
 export const wishesTag = (eventId: number) => `wishes:${eventId}`;
 
 // Event, agenda and approved wishes change rarely; cache them per event and bust via revalidateTag in admin actions.
-export function getEvent(eventId: number) {
-  return unstable_cache(() => fetchEvent(eventId), ["event", String(eventId)], { tags: [eventTag(eventId)] })();
+// The raw row is cached and parsed per request, so schema defaults added later reach events cached before them.
+export async function getEvent(eventId: number): Promise<EventData | null> {
+  const row = await unstable_cache(() => fetchEventRow(eventId), ["event-row", String(eventId)], {
+    tags: [eventTag(eventId)],
+  })();
+  return row ? toEventData(row) : null;
 }
 export function getAgenda(eventId: number) {
   return unstable_cache(() => fetchAgenda(eventId), ["agenda", String(eventId)], { tags: [eventTag(eventId)] })();
@@ -46,10 +50,10 @@ export function toEventData(row: Record<string, unknown>): EventData {
   };
 }
 
-async function fetchEvent(eventId: number): Promise<EventData | null> {
+async function fetchEventRow(eventId: number): Promise<Record<string, unknown> | null> {
   const { data, error } = await db().from("event").select("*").eq("id", eventId).maybeSingle();
   if (error) throw new Error(error.message);
-  return data ? toEventData(data) : null;
+  return data;
 }
 
 async function fetchAgenda(eventId: number): Promise<ScheduleDay[]> {

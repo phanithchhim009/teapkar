@@ -86,6 +86,19 @@ Code lives in `src/components/invite/bloom/`. `Invitation.tsx` hands off to `Blo
 
 Video uploads need `supabase/migrations/0003_bloom_video.sql`, which lets the media bucket accept `video/mp4` and `video/webm`.
 
+## Lotus theme (envelope)
+
+Pick **Lotus envelope** in **Admin → Customize → Theme**. It follows the "olive envelope with a gold lotus seal" template: a sealed envelope on a blurred photo; tapping it breaks the seal, opens the scalloped flap, lifts the name card and zooms into a full-screen couple photo.
+
+Sections, top to bottom: hero (title, names, guest, weekday/day/month/year row), invitation letter on cream (parents, arched photo, message, names), the couple in a scalloped gold frame, countdown with drifting names behind it, a scroll-lit agenda timeline, a love-story carousel, a "float a lotus" water scene (tap to make ripples), masonry gallery, location (embedded map, Google Maps, add-to-calendar `.ics`), KHQR gift with a Save QR button, RSVP and wishes, and candle-lit thanks with optional apology letter.
+
+Settings:
+- **Theme tab:** olive / night / cream and three golds, romanised names written in script under the Khmer names, water scene on/off.
+- **Text tab:** parents of each host, a closing line and a letter of apology, per language.
+- **Media tab:** hero, arched, couple and water photos, a monogram PNG, the love-story photos with KH/EN captions, and an embedded map (paste Google Maps → Share → Embed a map).
+
+Empty photos fall back to the main background and the gallery, so it looks complete with just a few uploads. Code lives in `src/components/invite/lotus/`; colours and animations are the `.theme-lotus` rules in `globals.css`.
+
 ## Upgrading to multiple events
 
 `supabase/migrations/0004_multi_event.sql` turns the single event into event `1` and gives guests, agenda days and wishes an `event_id`, so existing guest links keep working. It also renames `groom`/`bride` to `host_a`/`host_b` and replaces `save_agenda(jsonb)` with `save_agenda(event_id, jsonb)`. Run it in the SQL Editor (or `supabase db push`) **before** deploying this version of the app.

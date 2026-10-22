@@ -12,6 +12,7 @@ import { Countdown } from "./Countdown";
 import { Hosts } from "./Hosts";
 import { labelsFor, type Lang } from "./i18n";
 import { Lightbox } from "./Lightbox";
+import { LotusInvitation } from "./lotus/LotusInvitation";
 import { unoptimized } from "./media";
 import { Reveal, SectionTitle } from "./Reveal";
 import { Rsvp } from "./Rsvp";
@@ -41,8 +42,10 @@ function bg(url: string, fallback: string) {
 }
 
 export function Invitation(props: Props) {
-  // Bloom has its own scene-based component tree; classic and angkor share the one below.
-  return props.event.config.theme === "bloom" ? <BloomInvitation {...props} /> : <ClassicInvitation {...props} />;
+  // Bloom and Lotus have their own component trees; classic and angkor share the one below.
+  if (props.event.config.theme === "bloom") return <BloomInvitation {...props} />;
+  if (props.event.config.theme === "lotus") return <LotusInvitation {...props} />;
+  return <ClassicInvitation {...props} />;
 }
 
 function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview = false }: Props) {

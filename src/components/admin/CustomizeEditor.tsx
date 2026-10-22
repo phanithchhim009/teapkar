@@ -14,6 +14,8 @@ import {
   THEME_PRESETS,
   type Theme,
   type BloomConfig,
+  type LotusConfig,
+  type LotusText,
   type EventConfig,
   type EventType,
   type EventData,
@@ -69,7 +71,15 @@ const THEME_OPTIONS: { id: Theme; name: string; desc: string }[] = [
   { id: "classic", name: "Classic", desc: "Soft cream and peach with floating petals" },
   { id: "angkor", name: "Angkor temple", desc: "Sandstone and gold: Angkor Wat skyline, naga arch, lotus and kbach ornament" },
   { id: "bloom", name: "Bloom", desc: "Watercolor florals and gold lettering, with an animated arch intro and scroll reveals" },
+  { id: "lotus", name: "Lotus envelope", desc: "Olive envelope with a gold lotus seal that opens; gold on cream, olive and night, love story, candles" },
 ];
+
+const LOTUS_TEXT_LABELS: Record<keyof LotusText, [string, string]> = {
+  parentsA: ["Groom's parents (or the host's family)", "One name per line, e.g. លោក … / និងលោកស្រី …"],
+  parentsB: ["Bride's parents", "Leave empty for single-host events."],
+  closing: ["Closing line", "Shown under the names, e.g. ដោយមេត្រីភាព។ សូមអរគុណ!"],
+  apology: ["Letter of apology", "Shown as a second card next to the thank-you letter. Leave empty to hide."],
+};
 
 export function CustomizeEditor({ initial, agenda }: { initial: EventData; agenda: ScheduleDay[] }) {
   const [tab, setTab] = useState<Tab>("Event & Date");
@@ -88,6 +98,8 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
   const cfg = <K extends keyof EventConfig>(k: K, v: EventConfig[K]) => patch({ config: { ...data.config, [k]: v } });
   const bcfg = <K extends keyof BloomConfig>(k: K, v: BloomConfig[K]) => cfg("bloom", { ...data.config.bloom, [k]: v });
   const bloom = data.config.theme === "bloom";
+  const lotus = data.config.theme === "lotus";
+  const lcfg = <K extends keyof LotusConfig>(k: K, v: LotusConfig[K]) => cfg("lotus", { ...data.config.lotus, [k]: v });
   const typeInfo = EVENT_TYPE_INFO[data.type];
   // Picking a style also applies its colours/script font; they can still be fine-tuned below.
   const pickTheme = (theme: Theme) => patch({ config: { ...data.config, theme, ...THEME_PRESETS[theme] } });
@@ -194,6 +206,20 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
                 )}
               </Field>
             ))}
+            {lotus && (
+              <div className="space-y-4 border-t border-neutral-100 pt-4">
+                <h3 className="text-sm font-semibold">Lotus text ({lang === "kh" ? "ខ្មែរ" : "English"})</h3>
+                {(Object.keys(LOTUS_TEXT_LABELS) as (keyof LotusText)[]).map((k) => (
+                  <Field key={`${lang}-lotus-${k}`} label={LOTUS_TEXT_LABELS[k][0]} hint={LOTUS_TEXT_LABELS[k][1]}>
+                    <Textarea
+                      rows={k === "apology" ? 5 : 2}
+                      value={data.config.lotus[lang][k]}
+                      onChange={(e) => lcfg(lang, { ...data.config.lotus[lang], [k]: e.target.value })}
+                    />
+                  </Field>
+                ))}
+              </div>
+            )}
           </Card>
         )}
 
@@ -247,6 +273,7 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
               </Field>
             </div>
             {bloom && <BloomOptions value={data.config.bloom} set={bcfg} />}
+            {lotus && <LotusOptions value={data.config.lotus} set={lcfg} />}
           </Card>
         )}
 
@@ -275,12 +302,33 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
                 </div>
               </div>
             )}
+            {lotus && (
+              <div className="space-y-3 border-t border-neutral-100 pt-5">
+                <div>
+                  <h3 className="text-sm font-semibold">Lotus photos</h3>
+                  <p className="text-xs text-neutral-500">Empty photos fall back to the main background and the gallery.</p>
+                </div>
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <MediaUpload label="Hero photo (full screen after the envelope)" value={data.config.lotus.heroPhoto} onChange={(v) => lcfg("heroPhoto", v)} />
+                  <MediaUpload label="Arched photo (invitation letter)" value={data.config.lotus.archPhoto} onChange={(v) => lcfg("archPhoto", v)} />
+                  <MediaUpload label="Couple photo (scalloped gold frame)" value={data.config.lotus.couplePhoto} onChange={(v) => lcfg("couplePhoto", v)} />
+                  <MediaUpload label="Water scene (tap to float a lotus)" value={data.config.lotus.waterPhoto} onChange={(v) => lcfg("waterPhoto", v)} />
+                  <MediaUpload label="Monogram (transparent PNG, replaces the names on the card)" value={data.config.lotus.monogram} onChange={(v) => lcfg("monogram", v)} />
+                </div>
+                <StoryEditor value={data.config.lotus.story} onChange={(v) => lcfg("story", v)} />
+              </div>
+            )}
             <GalleryEditor value={data.config.gallery} onChange={(v) => cfg("gallery", v)} />
             <div className="grid gap-5 border-t border-neutral-100 pt-5 sm:grid-cols-2">
               <MediaUpload label="Map image (optional)" value={data.config.mapImage} onChange={(v) => cfg("mapImage", v)} />
               <Field label="Google Maps link">
                 <Input value={data.config.mapUrl} onChange={(e) => cfg("mapUrl", e.target.value)} placeholder="https://maps.app.goo.gl/…" />
               </Field>
+              {lotus && (
+                <Field label="Embedded map (Lotus)" hint="Google Maps → Share → Embed a map → paste the <iframe> code or its src link.">
+                  <Textarea rows={2} value={data.config.lotus.mapEmbed} onChange={(e) => lcfg("mapEmbed", e.target.value)} placeholder="https://www.google.com/maps/embed?pb=…" />
+                </Field>
+              )}
             </div>
           </Card>
         )}
@@ -387,6 +435,72 @@ function BloomOptions({ value: b, set }: { value: BloomConfig; set: <K extends k
           </Select>
         </Field>
       </div>
+    </div>
+  );
+}
+
+function LotusOptions({ value: l, set }: { value: LotusConfig; set: <K extends keyof LotusConfig>(k: K, v: LotusConfig[K]) => void }) {
+  return (
+    <div className="space-y-4 border-t border-neutral-100 pt-5">
+      <h3 className="text-sm font-semibold">Lotus options</h3>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <ColorField label="Olive (envelope, sections)" value={l.olive} onChange={(v) => set("olive", v)} />
+        <ColorField label="Night (agenda, thanks)" value={l.night} onChange={(v) => set("night", v)} />
+        <ColorField label="Cream (paper)" value={l.cream} onChange={(v) => set("cream", v)} />
+        <ColorField label="Gold" value={l.gold} onChange={(v) => set("gold", v)} />
+        <ColorField label="Gold (highlight)" value={l.goldLight} onChange={(v) => set("goldLight", v)} />
+        <ColorField label="Gold (deep)" value={l.goldDeep} onChange={(v) => set("goldDeep", v)} />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Names in script, first host" hint="Optional romanised name, written in script under the Khmer names.">
+          <Input value={l.altHostA} onChange={(e) => set("altHostA", e.target.value)} placeholder="Ngan Veasna" />
+        </Field>
+        <Field label="Names in script, second host">
+          <Input value={l.altHostB} onChange={(e) => set("altHostB", e.target.value)} placeholder="Seng Sreynich" />
+        </Field>
+      </div>
+      <Field label="Water scene (tap to float a lotus)">
+        <Select value={l.water ? "on" : "off"} onChange={(e) => set("water", e.target.value === "on")}>
+          <option value="on">Shown</option>
+          <option value="off">Hidden</option>
+        </Select>
+      </Field>
+    </div>
+  );
+}
+
+function StoryEditor({ value, onChange }: { value: LotusConfig["story"]; onChange: (v: LotusConfig["story"]) => void }) {
+  const update = (i: number, p: Partial<LotusConfig["story"][number]>) => onChange(value.map((s, j) => (j === i ? { ...s, ...p } : s)));
+  return (
+    <div className="space-y-3">
+      <div>
+        <span className="text-sm font-medium text-neutral-700">Love story carousel</span>
+        <p className="text-xs text-neutral-500">Photos with a short caption each. Empty: the first gallery photos are used without captions.</p>
+      </div>
+      {value.map((s, i) => (
+        <div key={i} className="grid gap-3 rounded-lg border border-neutral-200 p-3 sm:grid-cols-[180px_1fr]">
+          <MediaUpload label={`Photo ${i + 1}`} value={s.src} onChange={(v) => update(i, { src: v })} />
+          <div className="space-y-2">
+            <Field label="Caption (ខ្មែរ)">
+              <Input value={s.kh} onChange={(e) => update(i, { kh: e.target.value })} placeholder="ជួបគ្នាដំបូង" />
+            </Field>
+            <Field label="Caption (English)">
+              <Input value={s.en} onChange={(e) => update(i, { en: e.target.value })} placeholder="The first time we met" />
+            </Field>
+            <div className="flex gap-2">
+              <Button size="sm" variant="ghost" disabled={i === 0} onClick={() => onChange(value.map((x, j) => (j === i - 1 ? value[i] : j === i ? value[i - 1] : x)))}>
+                Move up
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => onChange(value.filter((_, j) => j !== i))}>
+                Remove
+              </Button>
+            </div>
+          </div>
+        </div>
+      ))}
+      <Button size="sm" variant="ghost" onClick={() => onChange([...value, { src: "", kh: "", en: "" }])}>
+        + Add story photo
+      </Button>
     </div>
   );
 }

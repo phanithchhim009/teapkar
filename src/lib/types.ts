@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const THEMES = ["classic", "angkor", "bloom"] as const;
+export const THEMES = ["classic", "angkor", "bloom", "lotus"] as const;
 export type Theme = (typeof THEMES)[number];
 
 // Keep in sync with the event.type check (supabase/migrations/0004_multi_event.sql).
@@ -22,6 +22,15 @@ export const THEME_PRESETS: Record<Theme, ThemePreset> = {
     fontEn: "Cormorant Garamond",
     fontKh: "Moul",
     fontBodyKh: "Noto Sans Khmer",
+  },
+  // Olive envelope with a gold lotus wax seal; cream, olive and night sections with gold lettering.
+  lotus: {
+    primaryColor: "#c9a45a",
+    textColor: "#4b5230",
+    guestNameColor: "#e3c47c",
+    fontEn: "Cormorant Garamond",
+    fontKh: "Moul",
+    fontBodyKh: "Battambang",
   },
 };
 
@@ -47,6 +56,44 @@ export const bloomConfigSchema = z.object({
 });
 export type BloomConfig = z.infer<typeof bloomConfigSchema>;
 
+/** Per-language text only the "lotus" theme shows. Empty strings hide the block. */
+export const lotusTextSchema = z.object({
+  parentsA: z.string().default(""),
+  parentsB: z.string().default(""),
+  closing: z.string().default(""),
+  apology: z.string().default(""),
+});
+export type LotusText = z.infer<typeof lotusTextSchema>;
+const emptyLotusText = () => lotusTextSchema.parse({});
+
+export const lotusStorySchema = z.object({ src: z.string(), kh: z.string().default(""), en: z.string().default("") });
+export type LotusStory = z.infer<typeof lotusStorySchema>;
+
+/** Options only the "lotus" theme reads. Empty photos fall back to the main background and gallery. */
+export const lotusConfigSchema = z.object({
+  olive: z.string().default("#5b6339"),
+  night: z.string().default("#23251b"),
+  cream: z.string().default("#f4ecd8"),
+  gold: z.string().default("#d9b768"),
+  goldLight: z.string().default("#f7e6ad"),
+  goldDeep: z.string().default("#a27a2c"),
+  heroPhoto: z.string().default(""),
+  archPhoto: z.string().default(""),
+  couplePhoto: z.string().default(""),
+  waterPhoto: z.string().default(""),
+  monogram: z.string().default(""),
+  /** The hosts' names in the other script (e.g. romanised), shown in script under the Khmer names. */
+  altHostA: z.string().default(""),
+  altHostB: z.string().default(""),
+  story: z.array(lotusStorySchema).catch([]).default([]),
+  water: z.boolean().catch(true).default(true),
+  /** A Google Maps embed link, or the whole <iframe> snippet from Share → Embed a map. */
+  mapEmbed: z.string().default(""),
+  kh: lotusTextSchema.catch(emptyLotusText).default(emptyLotusText),
+  en: lotusTextSchema.catch(emptyLotusText).default(emptyLotusText),
+});
+export type LotusConfig = z.infer<typeof lotusConfigSchema>;
+
 export const eventConfigSchema = z.object({
   // Unknown values (e.g. a theme removed later) fall back to classic instead of breaking the page.
   theme: z.enum(THEMES).catch("classic").default("classic"),
@@ -71,6 +118,7 @@ export const eventConfigSchema = z.object({
   accountNumber: z.string().default(""),
   gallery: z.array(z.string()).default([]),
   bloom: bloomConfigSchema.catch(() => bloomConfigSchema.parse({})).default(() => bloomConfigSchema.parse({})),
+  lotus: lotusConfigSchema.catch(() => lotusConfigSchema.parse({})).default(() => lotusConfigSchema.parse({})),
 });
 export type EventConfig = z.infer<typeof eventConfigSchema>;
 

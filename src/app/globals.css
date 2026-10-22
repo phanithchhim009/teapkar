@@ -247,3 +247,162 @@ body {
   border-radius: 1.25rem;
 }
 .theme-bloom .btn-primary { background: var(--green); border-radius: 9999px; }
+
+/* ---------- "lotus" theme: olive envelope, gold lotus seal, cream / olive / night sections ---------- */
+.theme-lotus {
+  --lt-olive: #5b6339;
+  --lt-night: #23251b;
+  --lt-cream: #f4ecd8;
+  --lt-gold: #d9b768;
+  --lt-gold-light: #f7e6ad;
+  --lt-gold-deep: #a27a2c;
+  --lt-ink: #4b5230;
+}
+/* Moul's stacked vowels clip at normal line-height. */
+.theme-lotus .font-title { line-height: 1.8; }
+.theme-lotus .lt-cream {
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgb(255 255 255 / 0.55), transparent 70%),
+    var(--lt-cream);
+  color: var(--lt-ink);
+}
+.theme-lotus .lt-olive {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lt-olive) 92%, #fff), var(--lt-olive) 30%, color-mix(in srgb, var(--lt-olive) 85%, #000));
+  color: #f1e9d4;
+}
+.theme-lotus .lt-deep {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lt-olive) 70%, #000), color-mix(in srgb, var(--lt-olive) 45%, var(--lt-night)));
+  color: #f1e9d4;
+}
+.theme-lotus .lt-night {
+  background: radial-gradient(100% 50% at 50% 0%, color-mix(in srgb, var(--lt-olive) 30%, var(--lt-night)), var(--lt-night) 70%);
+  color: #f1e9d4;
+}
+
+/* Shimmering gold lettering (on dark or photo backgrounds). */
+.theme-lotus .lt-gold {
+  display: inline-block;
+  padding-block: 0.08em;
+  background-image: linear-gradient(100deg, var(--lt-gold-deep) 0%, var(--lt-gold) 22%, var(--lt-gold-light) 38%, var(--lt-gold) 52%, var(--lt-gold-deep) 70%, var(--lt-gold) 85%, var(--lt-gold-light) 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.35));
+  animation: lt-shimmer 7s linear infinite;
+}
+/* Deeper gold for cream backgrounds, where pale gold would vanish. */
+.theme-lotus .lt-gold-ink {
+  display: inline-block;
+  padding-block: 0.08em;
+  background-image: linear-gradient(100deg, color-mix(in srgb, var(--lt-gold-deep) 80%, #000), var(--lt-gold-deep) 35%, var(--lt-gold) 50%, var(--lt-gold-deep) 65%, color-mix(in srgb, var(--lt-gold-deep) 80%, #000));
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lt-shimmer 9s linear infinite;
+}
+.theme-lotus .lt-gold-soft { color: var(--lt-gold-light); }
+/* Inline-block keeps the gradient as wide as the text; block-level tags still need their own line. */
+.theme-lotus :is(p, h1, h2, h3).lt-gold,
+.theme-lotus :is(p, h1, h2, h3).lt-gold-ink { display: block; }
+@keyframes lt-shimmer {
+  from { background-position: 0% 50%; }
+  to { background-position: 220% 50%; }
+}
+
+/* The envelope's name card. */
+.theme-lotus .lt-card {
+  background:
+    radial-gradient(120% 90% at 30% 20%, #fffdf6, transparent 60%),
+    linear-gradient(160deg, var(--lt-cream), color-mix(in srgb, var(--lt-cream) 85%, #c9b68a));
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.6);
+}
+
+/* Arched photo with a double gold rim. */
+.theme-lotus .lt-arch {
+  box-shadow: 0 0 0 1.5px var(--lt-gold), 0 0 0 7px var(--lt-cream), 0 0 0 8.5px color-mix(in srgb, var(--lt-gold) 70%, transparent), 0 24px 40px -20px rgb(60 50 20 / 0.6);
+}
+/* Love-story photo frame. */
+.theme-lotus .lt-frame {
+  border: 3px solid var(--lt-gold-light);
+  outline: 1px solid color-mix(in srgb, var(--lt-gold) 70%, transparent);
+  outline-offset: 3px;
+  box-shadow: 0 20px 36px -18px rgb(0 0 0 / 0.8);
+}
+
+/* Gilded pill buttons. */
+.theme-lotus .lt-pill {
+  color: #3b2f12;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, var(--lt-gold-light) 0%, var(--lt-gold) 55%, color-mix(in srgb, var(--lt-gold-deep) 85%, var(--lt-gold)) 100%);
+  border: 1px solid var(--lt-gold-deep);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), 0 8px 18px -10px rgb(0 0 0 / 0.7);
+  transition: transform 0.2s, filter 0.2s;
+}
+.theme-lotus .lt-pill:hover { filter: brightness(1.06); }
+.theme-lotus .lt-pill:active { transform: scale(0.97); }
+
+/* Round floating controls. */
+.theme-lotus .lt-ctl {
+  color: #fff;
+  background: rgb(20 20 14 / 0.45);
+  border: 1px solid rgb(255 255 255 / 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Shared RSVP form and wish form. */
+.theme-lotus .card {
+  color: var(--lt-ink);
+  background: color-mix(in srgb, var(--lt-cream) 96%, #fff);
+  border: 1px solid color-mix(in srgb, var(--lt-gold) 70%, transparent);
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--lt-cream) 96%, #fff), inset 0 0 0 4px color-mix(in srgb, var(--lt-gold) 35%, transparent), 0 18px 30px -18px rgb(0 0 0 / 0.7);
+}
+.theme-lotus .btn-primary {
+  color: #3b2f12;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, var(--lt-gold-light), var(--lt-gold) 55%, var(--lt-gold-deep));
+}
+
+/* Countdown watermark drifting sideways. */
+.theme-lotus .lt-marquee { animation: lt-marquee 40s linear infinite; }
+@keyframes lt-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Candles. */
+.theme-lotus .lt-flame {
+  transform-origin: 50% 90%;
+  animation: lt-flicker 1.6s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 6px rgb(255 200 90 / 0.9));
+}
+.theme-lotus .lt-glow {
+  background: radial-gradient(circle, rgb(255 210 120 / 0.45), transparent 65%);
+  animation: lt-glow 2.4s ease-in-out infinite alternate;
+}
+@keyframes lt-flicker {
+  0% { transform: scale(1, 1) rotate(-1deg); }
+  30% { transform: scale(0.94, 1.06) rotate(1.5deg); }
+  60% { transform: scale(1.04, 0.95) rotate(-2deg); }
+  100% { transform: scale(0.97, 1.04) rotate(1deg); }
+}
+@keyframes lt-glow {
+  from { opacity: 0.6; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1.08); }
+}
+
+.theme-lotus .lt-noscroll { scrollbar-width: none; }
+.theme-lotus .lt-noscroll::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-lotus .lt-gold,
+  .theme-lotus .lt-gold-ink,
+  .theme-lotus .lt-marquee,
+  .theme-lotus .lt-flame,
+  .theme-lotus .lt-glow { animation: none; }
+}
