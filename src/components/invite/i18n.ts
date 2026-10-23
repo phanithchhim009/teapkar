@@ -71,6 +71,8 @@ export const labels = {
     gratitudeLetter: "លិខិតថ្លែងអំណរគុណ",
     apologyLetter: "លិខិតសូមអភ័យទោស",
     tapSeal: "ចុចលើត្រា ដើម្បីបើកសំបុត្រ",
+    scanMap: "ស្កេនដើម្បីមើលទីតាំង",
+    noWishes: "សូមក្លាយជាអ្នកដំបូងដែលផ្ញើពរជ័យ",
   },
   en: {
     open: "Open Invitation",
@@ -139,6 +141,8 @@ export const labels = {
     gratitudeLetter: "A Letter of Thanks",
     apologyLetter: "A Letter of Apology",
     tapSeal: "Tap the seal to open",
+    scanMap: "Scan to view the location",
+    noWishes: "Be the first to send your wishes",
   },
 } satisfies Record<Lang, Record<string, string>>;
 

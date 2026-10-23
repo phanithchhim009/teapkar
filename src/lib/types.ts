@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const THEMES = ["classic", "angkor", "bloom", "lotus"] as const;
+export const THEMES = ["classic", "angkor", "bloom", "lotus", "garden"] as const;
 export type Theme = (typeof THEMES)[number];
 
 // Keep in sync with the event.type check (supabase/migrations/0004_multi_event.sql).
@@ -30,6 +30,15 @@ export const THEME_PRESETS: Record<Theme, ThemePreset> = {
     guestNameColor: "#e3c47c",
     fontEn: "Cormorant Garamond",
     fontKh: "Moul",
+    fontBodyKh: "Battambang",
+  },
+  // White damask envelope, silk curtains and a garden of white blossoms, lettered in deep green.
+  garden: {
+    primaryColor: "#2f5a46",
+    textColor: "#2f4d3f",
+    guestNameColor: "#2f5a46",
+    fontEn: "Cormorant Garamond",
+    fontKh: "Moulpali",
     fontBodyKh: "Battambang",
   },
 };
@@ -94,6 +103,38 @@ export const lotusConfigSchema = z.object({
 });
 export type LotusConfig = z.infer<typeof lotusConfigSchema>;
 
+/** Per-language text only the "garden" theme shows. Empty strings hide the block. */
+export const gardenTextSchema = z.object({
+  closing: z.string().default(""),
+});
+export type GardenText = z.infer<typeof gardenTextSchema>;
+const emptyGardenText = () => gardenTextSchema.parse({});
+
+/** Options only the "garden" theme reads. Empty artwork strings mean "use the built-in drawing". */
+export const gardenConfigSchema = z.object({
+  green: z.string().default("#2f5a46"),
+  leaf: z.string().default("#7f9c74"),
+  ivory: z.string().default("#fbfaf6"),
+  /** Transparent PNG used on the wax seal, the hero and the footer. Empty: script initials. */
+  monogram: z.string().default(""),
+  /** Replaces the drawn silk curtains on the hero (an image of a draped backdrop). */
+  curtainImage: z.string().default(""),
+  /** Transparent PNG of flowers along the bottom of the hero. */
+  flowerImage: z.string().default(""),
+  /** Transparent PNG hung across the top of the screen while scrolling (greenery, chandelier). */
+  garlandImage: z.string().default(""),
+  /** The hosts' names in the other script (e.g. romanised), written in script on the hero. */
+  altHostA: z.string().default(""),
+  altHostB: z.string().default(""),
+  leaves: z.boolean().catch(true).default(true),
+  chandelier: z.boolean().catch(true).default(true),
+  /** A Google Maps embed link, or the whole <iframe> snippet from Share → Embed a map. */
+  mapEmbed: z.string().default(""),
+  kh: gardenTextSchema.catch(emptyGardenText).default(emptyGardenText),
+  en: gardenTextSchema.catch(emptyGardenText).default(emptyGardenText),
+});
+export type GardenConfig = z.infer<typeof gardenConfigSchema>;
+
 export const eventConfigSchema = z.object({
   // Unknown values (e.g. a theme removed later) fall back to classic instead of breaking the page.
   theme: z.enum(THEMES).catch("classic").default("classic"),
@@ -119,6 +160,7 @@ export const eventConfigSchema = z.object({
   gallery: z.array(z.string()).default([]),
   bloom: bloomConfigSchema.catch(() => bloomConfigSchema.parse({})).default(() => bloomConfigSchema.parse({})),
   lotus: lotusConfigSchema.catch(() => lotusConfigSchema.parse({})).default(() => lotusConfigSchema.parse({})),
+  garden: gardenConfigSchema.catch(() => gardenConfigSchema.parse({})).default(() => gardenConfigSchema.parse({})),
 });
 export type EventConfig = z.infer<typeof eventConfigSchema>;
 
@@ -132,9 +174,19 @@ export const invitationTextSchema = z.object({
   details_title: z.string().default(""),
   gratitude_title: z.string().default(""),
   gratitude_message: z.string().default(""),
+  /** Wedding only: the groom's (a) and the bride's (b) parents, shown on every theme. */
+  father_a: z.string().default(""),
+  mother_a: z.string().default(""),
+  father_b: z.string().default(""),
+  mother_b: z.string().default(""),
 });
 export type InvitationText = z.infer<typeof invitationTextSchema>;
-export const TEXT_FIELDS = Object.keys(invitationTextSchema.shape) as (keyof InvitationText)[];
+export const PARENT_FIELDS = ["father_a", "mother_a", "father_b", "mother_b"] as const satisfies readonly (keyof InvitationText)[];
+export type ParentField = (typeof PARENT_FIELDS)[number];
+/** The general text fields; the parents have their own block in the admin. */
+export const TEXT_FIELDS = (Object.keys(invitationTextSchema.shape) as (keyof InvitationText)[]).filter(
+  (k): k is Exclude<keyof InvitationText, ParentField> => !(PARENT_FIELDS as readonly string[]).includes(k),
+);
 
 export const sectionsSchema = z.object({
   countdown: z.boolean().default(true),

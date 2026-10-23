@@ -8,7 +8,9 @@ import { EVENT_TYPE_INFO, eventHosts, shareTitle } from "@/lib/event-types";
 import type { EventData, ScheduleDay } from "@/lib/types";
 import type { InviteGuest } from "../Invitation";
 import { labelsFor, type Lang } from "../i18n";
+import { downloadIcs } from "../calendar";
 import { Lightbox } from "../Lightbox";
+import { weddingParents } from "../parents";
 import type { PublicWish } from "../Wishes";
 import { LotusIcon } from "./Art";
 import { Envelope } from "./Envelope";
@@ -23,34 +25,6 @@ type Props = {
   initialLang: Lang;
   preview?: boolean;
 };
-
-/** Downloads an .ics file so the guest can drop the event into their calendar. */
-function downloadIcs({ title, start, location }: { title: string; start: string; location: string }) {
-  const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-  const esc = (s: string) => s.replace(/[\\;,]/g, (m) => `\\${m}`).replace(/\r?\n/g, "\\n");
-  const begin = new Date(start);
-  const end = new Date(begin.getTime() + 4 * 3600_000);
-  const ics = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Teabkar//Invitation//EN",
-    "BEGIN:VEVENT",
-    `UID:${begin.getTime()}@teabkar`,
-    `DTSTAMP:${fmt(new Date())}`,
-    `DTSTART:${fmt(begin)}`,
-    `DTEND:${fmt(end)}`,
-    `SUMMARY:${esc(title)}`,
-    location && `LOCATION:${esc(location)}`,
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ]
-    .filter(Boolean)
-    .join("\r\n");
-  const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
-  const a = Object.assign(document.createElement("a"), { href: url, download: "invitation.ics" });
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
-}
 
 /**
  * "Lotus" theme: a sealed olive envelope opens into a full-bleed couple photo, then alternating
@@ -73,6 +47,9 @@ export function LotusInvitation({ event, agenda, guest, wishes, initialLang, pre
   const hosts = eventHosts(event);
   const pair = EVENT_TYPE_INFO[event.type].pair && hosts.length === 2;
   const altHosts = [l.altHostA, pair ? l.altHostB : ""].filter((s) => s.trim()).join(" & ");
+  // The shared four-parent fields win; events set up before them keep Lotus's own text boxes.
+  const shared = weddingParents(event, text);
+  const parentText: [string, string] = shared ? [shared[0].join("\n"), shared[1].join("\n")] : [extra.parentsA, extra.parentsB];
 
   // Photos fall back down the chain so the theme still looks complete with only a few uploads.
   const g = c.gallery;
@@ -176,7 +153,7 @@ export function LotusInvitation({ event, agenda, guest, wishes, initialLang, pre
             />
             <Family
               pair={pair}
-              parents={[extra.parentsA, extra.parentsB]}
+              parents={parentText}
               title={text.invitation_title}
               message={text.invitation_message}
               photo={arch}

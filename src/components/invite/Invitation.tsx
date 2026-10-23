@@ -9,9 +9,11 @@ import type { EventData, ScheduleDay } from "@/lib/types";
 import { AngkorSkyline, Lotus, LotusBud, NagaArch } from "./angkor/Ornaments";
 import { BloomInvitation } from "./bloom/BloomInvitation";
 import { Countdown } from "./Countdown";
+import { GardenInvitation } from "./garden/GardenInvitation";
 import { Hosts } from "./Hosts";
 import { labelsFor, type Lang } from "./i18n";
 import { Lightbox } from "./Lightbox";
+import { ParentsGrid, weddingParents } from "./parents";
 import { LotusInvitation } from "./lotus/LotusInvitation";
 import { unoptimized } from "./media";
 import { Reveal, SectionTitle } from "./Reveal";
@@ -42,9 +44,10 @@ function bg(url: string, fallback: string) {
 }
 
 export function Invitation(props: Props) {
-  // Bloom and Lotus have their own component trees; classic and angkor share the one below.
+  // Bloom, Lotus and Garden have their own component trees; classic and angkor share the one below.
   if (props.event.config.theme === "bloom") return <BloomInvitation {...props} />;
   if (props.event.config.theme === "lotus") return <LotusInvitation {...props} />;
+  if (props.event.config.theme === "garden") return <GardenInvitation {...props} />;
   return <ClassicInvitation {...props} />;
 }
 
@@ -100,6 +103,7 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
   };
 
   const angkor = c.theme === "angkor";
+  const parents = weddingParents(event, text);
   const gradient = angkor
     ? `linear-gradient(180deg, #f8f1e3, #efe1c3)`
     : `linear-gradient(160deg, #fffaf2, color-mix(in srgb, ${c.primaryColor} 25%, #fff))`;
@@ -245,6 +249,18 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
           </Reveal>
 
           <Reveal className="card mt-8 space-y-4 p-5" delay={0.1}>
+            {parents && (
+              <>
+                <ParentsGrid
+                  sides={parents}
+                  labels={[t.parentsA, t.parentsB]}
+                  labelClassName="font-heading mb-1 text-xs leading-relaxed"
+                  labelStyle={{ color: "var(--primary)" }}
+                  nameClassName="text-sm leading-7"
+                />
+                <div className="divider" />
+              </>
+            )}
             <p className="font-heading text-base leading-relaxed" style={{ color: "var(--primary)" }}>
               {text.invitation_title}
             </p>

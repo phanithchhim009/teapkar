@@ -18,7 +18,7 @@ Digital invitations for weddings, engagements, birthdays, housewarmings and othe
 - Each event (`/admin/events/<id>`) has the tabs below
 - **Dashboard**: guests, opened, attending/declined/pending, total attendees, recent opens, latest wishes
 - **Guests**: add, edit, delete, bulk paste or CSV import, search and filters, copy link, share to Telegram, download QR code, export CSV, regenerate link, reset RSVP
-- **Customize**: event name/type, hosts and date, KH/EN text, agenda, theme (colors, Khmer/English fonts, size, radius), media uploads (backgrounds, gallery, music, map), gift (KHQR USD/KHR plus account), section toggles, live phone preview
+- **Customize**: event name/type, hosts and date, KH/EN text (weddings also get the four parents — groom's father and mother, bride's father and mother — shown on every theme), agenda, theme (colors, Khmer/English fonts, size, radius), media uploads (backgrounds, gallery, music, map), gift (KHQR USD/KHR plus account), section toggles, live phone preview
 - **Wishes**: hide/show or delete
 
 ## Local development
@@ -98,6 +98,19 @@ Settings:
 - **Media tab:** hero, arched, couple and water photos, a monogram PNG, the love-story photos with KH/EN captions, and an embedded map (paste Google Maps → Share → Embed a map).
 
 Empty photos fall back to the main background and the gallery, so it looks complete with just a few uploads. Code lives in `src/components/invite/lotus/`; colours and animations are the `.theme-lotus` rules in `globals.css`.
+
+## White garden theme (curtains)
+
+Pick **White garden** in **Admin → Customize → Theme**. It follows the "white curtain wedding" template: a full-screen white damask envelope with a pearl wax seal at the tip of its flap. Tapping **Open** lifts the seal, opens the flap and lets the envelope fall away; silk curtains then draw back over a bed of white roses and baby's breath, revealing the title, the names in script, the monogram and the date.
+
+While scrolling, ivy, white corner drapes and a crystal chandelier hang across the top of the screen, and leaves drift down. Sections, top to bottom: invitation letter (monogram, parents of each host, message, names, date and place), countdown cards, agenda timeline (an icon is picked from each item's wording, e.g. ring, hair-cutting, meal, party), location (a QR code made from the Google Maps link, optional embedded map, Google Maps and add-to-calendar buttons), gallery (one wide photo, then a pair), RSVP and wishes (swipeable cards), KHQR gift card with Save QR, and thanks.
+
+Settings:
+- **Theme tab:** green, leaf and ivory colours, romanised names (written in script on the hero; their initials make the monogram), falling leaves and chandelier on/off.
+- **Text tab:** a closing line, per language (the parents come from the shared Parents fields).
+- **Media tab:** optional monogram PNG, curtain backdrop, flowers PNG and garland PNG to replace the drawn artwork, plus an embedded map.
+
+Picking the theme also sets Moulpali and Battambang. Code lives in `src/components/invite/garden/`; colours and animations are the `.theme-garden` rules in `globals.css`.
 
 ## Upgrading to multiple events
 
