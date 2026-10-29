@@ -18,7 +18,7 @@ export default function LoginPage() {
           <Button className="w-full" loading={pending}>
             {pending ? "Signing in…" : "ចូល · Sign in"}
           </Button>
-          <p className="text-center text-xs text-neutral-400">Site owner: leave the username empty.</p>
+          <p className="text-center text-xs text-neutral-400">Site owner: username “admin” (or leave it empty).</p>
         </form>
       </Card>
     </main>

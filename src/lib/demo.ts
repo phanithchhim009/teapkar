@@ -18,9 +18,9 @@ export async function demoEvent(theme: Theme, palette?: string): Promise<EventDa
   return {
     id: 0,
     type: "wedding",
-    name: "សុខ វិសាល & ចាន់ ស្រីនីត",
-    host_a: "សុខ វិសាល",
-    host_b: "ចាន់ ស្រីនីត",
+    name: "ឈឹម ផានិត & សន លក្ខណា",
+    host_a: "ឈឹម ផានិត",
+    host_b: "សន លក្ខណា",
     event_date: "2026-12-20T10:00:00.000Z",
     config: eventConfigSchema.parse({
       theme,
@@ -31,7 +31,7 @@ export async function demoEvent(theme: Theme, palette?: string): Promise<EventDa
       qrUsd: await demoQr("USD"),
       qrKhr: await demoQr("KHR"),
       bankName: "ABA",
-      accountName: "SOK VISAL",
+      accountName: "CHHIM PHANITH",
       accountNumber: "000 000 000",
       gallery: [`${D}/g1.webp`, `${D}/g2.webp`, `${D}/g3.webp`, `${D}/g4.webp`, `${D}/g5.webp`],
       story: [
