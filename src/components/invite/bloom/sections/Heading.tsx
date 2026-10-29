@@ -13,7 +13,7 @@ export function Heading({ title, subtitle }: { title: string; subtitle?: string 
       </Reveal>
       {subtitle && (
         <Reveal variant="fadeUp" delay={0.1}>
-          <p className="mt-1 text-sm leading-[1.8] text-[var(--green)]">
+          <p className="mt-1 whitespace-pre-line text-sm leading-[1.8] text-[var(--green)]">
             <Tx>{subtitle}</Tx>
           </p>
         </Reveal>

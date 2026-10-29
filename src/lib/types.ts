@@ -20,7 +20,7 @@ export const videoSchema = z.object({
 });
 export type Video = z.infer<typeof videoSchema>;
 
-export const THEMES = ["classic", "angkor", "bloom", "lotus", "garden"] as const;
+export const THEMES = ["classic", "royal", "angkor", "bloom", "lotus", "garden"] as const;
 export type Theme = (typeof THEMES)[number];
 
 // Keep in sync with the event.type check (supabase/migrations/0004_multi_event.sql).
@@ -31,7 +31,10 @@ type ThemePreset = { primaryColor: string; textColor: string; guestNameColor: st
 
 /** Colours and fonts applied when a theme is picked in the admin; they stay editable afterwards. */
 export const THEME_PRESETS: Record<Theme, ThemePreset> = {
-  classic: { primaryColor: "#f9af59", textColor: "#B08E4F", guestNameColor: "#364153", fontEn: "Great Vibes" },
+  // Warm amber on cream. Headings and buttons stay readable (4.3:1) for older guests.
+  classic: { primaryColor: "#b5651d", textColor: "#7a5a2e", guestNameColor: "#364153", fontEn: "Great Vibes" },
+  // Traditional Khmer wedding maroon and gold on ivory.
+  royal: { primaryColor: "#8b1a1e", textColor: "#4a2a17", guestNameColor: "#a0722a", fontEn: "Great Vibes", fontKh: "Moul", fontBodyKh: "Battambang" },
   // Aged gilding, carved sandstone shadow and laterite brown, as at Angkor Wat at sunrise.
   angkor: { primaryColor: "#b7862f", textColor: "#6b4a2b", guestNameColor: "#4a2c17", fontEn: "Cormorant Garamond" },
   // Watercolor florals with gold lettering and a deep leaf green.
@@ -123,6 +126,25 @@ export const lotusConfigSchema = z.object({
 });
 export type LotusConfig = z.infer<typeof lotusConfigSchema>;
 
+type LotusColors = Pick<LotusConfig, "olive" | "night" | "cream" | "gold" | "goldLight" | "goldDeep">;
+
+/** One-click colour sets for the Lotus style; `textColor` is the ink on the cream paper. Still editable afterwards. */
+export const LOTUS_PALETTES: { id: string; name: string; colors: LotusColors; textColor: string }[] = [
+  {
+    id: "olive",
+    name: "Olive",
+    colors: { olive: "#5b6339", night: "#23251b", cream: "#f4ecd8", gold: "#d9b768", goldLight: "#f7e6ad", goldDeep: "#a27a2c" },
+    textColor: "#4b5230",
+  },
+  {
+    // Deep cherry envelope, dark wine night sections, blush paper; same gold seal and lettering.
+    id: "cherry",
+    name: "Cherry",
+    colors: { olive: "#8c1c35", night: "#2b0b14", cream: "#fbefea", gold: "#d9b768", goldLight: "#f7e6ad", goldDeep: "#a27a2c" },
+    textColor: "#5e1a2b",
+  },
+];
+
 /** Per-language text only the "garden" theme shows. Empty strings hide the block. */
 export const gardenTextSchema = z.object({
   closing: z.string().default(""),
@@ -158,8 +180,8 @@ export type GardenConfig = z.infer<typeof gardenConfigSchema>;
 export const eventConfigSchema = z.object({
   // Unknown values (e.g. a theme removed later) fall back to classic instead of breaking the page.
   theme: z.enum(THEMES).catch("classic").default("classic"),
-  primaryColor: z.string().default("#f9af59"),
-  textColor: z.string().default("#B08E4F"),
+  primaryColor: z.string().default("#b5651d"),
+  textColor: z.string().default("#7a5a2e"),
   guestNameColor: z.string().default("#364153"),
   fontKh: z.string().default("Moul"),
   fontBodyKh: z.string().default("Battambang"),
@@ -192,6 +214,8 @@ export const invitationTextSchema = z.object({
   invitation_title: z.string().default(""),
   invitation_message: z.string().default(""),
   date_time: z.string().default(""),
+  /** Khmer lunar date, e.g. "ថ្ងៃអាទិត្យ ១កើត ខែមិគសិរ ឆ្នាំមមី អដ្ឋស័ក ព.ស. ២៥៧០". Typed in, not calculated. */
+  lunar_date: z.string().default(""),
   location: z.string().default(""),
   details_title: z.string().default(""),
   gratitude_title: z.string().default(""),
@@ -252,6 +276,8 @@ export type EventSummary = {
   rsvp_yes: number;
   rsvp_no: number;
   attending: number;
+  /** The customer account that manages this event, if any. */
+  account_id: string | null;
 };
 
 export type TimelineItem = { id: string; day_id: string; time: string; name: string; sort: number };

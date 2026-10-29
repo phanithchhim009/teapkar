@@ -1,14 +1,14 @@
 "use client";
 
 import { AnimatePresence, MotionConfig, useReducedMotion } from "framer-motion";
-import { Camera, CalendarDays, Home, MapPin, MessageCircle, QrCode } from "lucide-react";
+import { Camera, CalendarDays, Film, Heart, Home, MapPin, MessageCircle, QrCode } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { trackOpen } from "@/app/actions/guest";
 import { eventHosts, hostsLabel } from "@/lib/event-types";
 import type { EventData, ScheduleDay } from "@/lib/types";
 import type { InviteGuest } from "../Invitation";
-import { labelsFor, type Lang } from "../i18n";
-import { Lightbox } from "../Lightbox";
+import { labelsFor, withLunar, type Lang } from "../i18n";
+import { Lightbox, type Zoom } from "../Lightbox";
 import type { PublicWish } from "../Wishes";
 import { coverExitLead } from "./animations/variants";
 import { BloomProvider } from "./BloomContext";
@@ -25,6 +25,8 @@ import { LocationSection } from "./sections/LocationSection";
 import { MainSection } from "./sections/MainSection";
 import { MessagesSection } from "./sections/MessagesSection";
 import { ScheduleSection } from "./sections/ScheduleSection";
+import { StorySection } from "./sections/StorySection";
+import { VideoSection } from "./sections/VideoSection";
 
 type Props = {
   event: EventData;
@@ -39,6 +41,9 @@ type Props = {
 type Scene = "cover" | "opening" | "intro" | "main";
 
 const firstChar = (s: string) => Array.from(s.trim())[0] ?? "";
+
+/** 7 icons still fit the dock on a 360px-wide phone; past that the buttons get cramped. */
+const DOCK_MAX = 7;
 
 /** Warms the image cache. Videos are skipped: there is no valid preload destination for them. */
 function preload(src: string) {
@@ -57,10 +62,12 @@ export function BloomInvitation({ event, agenda, guest, wishes, initialLang, pre
   const [lang, setLang] = useState<Lang>(initialLang);
   const [scene, setScene] = useState<Scene>("cover");
   const [playing, setPlaying] = useState(false);
-  const [zoom, setZoom] = useState<string | null>(null);
+  const [zoom, setZoom] = useState<Zoom>(null);
+  const zoomOne = (src: string) => setZoom({ images: [src], index: 0 });
   const audio = useRef<HTMLAudioElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const tracked = useRef(false);
+  const pausedForVideo = useRef(false);
 
   const t = labelsFor(lang, event.type);
   const text = lang === "kh" ? event.text_kh : event.text_en;
@@ -106,11 +113,26 @@ export function BloomInvitation({ event, agenda, guest, wishes, initialLang, pre
   const toggleMusic = () => {
     const a = audio.current;
     if (!a) return;
+    pausedForVideo.current = false;
     if (a.paused) a.play().then(() => setPlaying(true)).catch(() => {});
     else {
       a.pause();
       setPlaying(false);
     }
+  };
+
+  // Hush the background music while a video plays, and bring it back afterwards if we were the ones who stopped it.
+  const videoStarted = () => {
+    const a = audio.current;
+    if (!a || a.paused) return;
+    a.pause();
+    setPlaying(false);
+    pausedForVideo.current = true;
+  };
+  const videoStopped = () => {
+    if (!pausedForVideo.current) return;
+    pausedForVideo.current = false;
+    audio.current?.play().then(() => setPlaying(true)).catch(() => {});
   };
   const toggleLang = () => setLang((l) => (l === "kh" ? "en" : "kh"));
 
@@ -126,21 +148,26 @@ export function BloomInvitation({ event, agenda, guest, wishes, initialLang, pre
   const showGallery = sections.gallery && c.gallery.length > 0;
   const showKhqr = sections.gift && !!(c.qrUsd || c.qrKhr);
   const showMessages = sections.wishes || sections.rsvp;
+  const story = c.story.filter((s) => s.photo || s.title_kh || s.title_en || s.text_kh || s.text_en);
+  const videos = c.videos.filter((v) => v.src);
+  const showStory = sections.story && story.length > 0;
+  const showVideo = sections.video && videos.length > 0;
 
-  const dock = useMemo<DockItem[]>(
-    () =>
-      [
-        { id: "main", icon: Home, label: t.navHome, on: true },
-        { id: "schedule", icon: CalendarDays, label: t.navSchedule, on: showSchedule },
-        { id: "location", icon: MapPin, label: t.navLocation, on: showMap },
-        { id: "gallery", icon: Camera, label: t.navGallery, on: showGallery },
-        { id: "khqr", icon: QrCode, label: t.navKhqr, on: showKhqr },
-        { id: "messages", icon: MessageCircle, label: t.navMessages, on: showMessages },
-      ]
-        .filter((d) => d.on)
-        .map(({ id, icon, label }) => ({ id, icon, label })),
-    [t, showSchedule, showMap, showGallery, showKhqr, showMessages],
-  );
+  const dock = useMemo<DockItem[]>(() => {
+    const items = [
+      { id: "main", icon: Home, label: t.navHome, on: true },
+      { id: "schedule", icon: CalendarDays, label: t.navSchedule, on: showSchedule },
+      { id: "location", icon: MapPin, label: t.navLocation, on: showMap },
+      { id: "story", icon: Heart, label: t.story, on: showStory, extra: true },
+      { id: "video", icon: Film, label: t.video, on: showVideo, extra: true },
+      { id: "gallery", icon: Camera, label: t.navGallery, on: showGallery },
+      { id: "khqr", icon: QrCode, label: t.navKhqr, on: showKhqr },
+      { id: "messages", icon: MessageCircle, label: t.navMessages, on: showMessages },
+    ].filter((d) => d.on);
+    // Story and film get a button only while there's room; their sections show either way.
+    let room = DOCK_MAX - items.filter((d) => !d.extra).length;
+    return items.filter((d) => !d.extra || room-- > 0).map(({ id, icon, label }) => ({ id, icon, label }));
+  }, [t, showSchedule, showMap, showStory, showVideo, showGallery, showKhqr, showMessages]);
 
   const vars = {
     "--gold-from": b.goldFrom,
@@ -170,10 +197,12 @@ export function BloomInvitation({ event, agenda, guest, wishes, initialLang, pre
             {scene === "main" && (
               <div ref={scrollRef} className="bloom-scroll relative z-10 h-full overflow-y-auto overflow-x-hidden">
                 <MainSection event={event} text={text} hero={hero} guestName={guest.name} />
-                {showSchedule && <ScheduleSection title={text.details_title || t.schedule} subtitle={text.date_time} agenda={agenda} />}
+                {showSchedule && <ScheduleSection title={text.details_title || t.schedule} subtitle={withLunar(text)} agenda={agenda} />}
                 {showMap && <LocationSection color={b.green} mapUrl={c.mapUrl} mapImage={c.mapImage} location={text.location} />}
-                {showGallery && <GallerySection photos={c.gallery} onOpen={setZoom} />}
-                {showKhqr && <KhqrSection config={c} onZoom={setZoom} />}
+                {showStory && <StorySection items={story} onZoom={setZoom} />}
+                {showVideo && <VideoSection videos={videos} onPlay={videoStarted} onStop={videoStopped} />}
+                {showGallery && <GallerySection photos={c.gallery} onOpen={zoomOne} />}
+                {showKhqr && <KhqrSection config={c} onZoom={zoomOne} />}
                 {showMessages && (
                   <MessagesSection
                     code={guest.code}
@@ -212,7 +241,7 @@ export function BloomInvitation({ event, agenda, guest, wishes, initialLang, pre
             )}
           </div>
 
-          <Lightbox src={zoom} onClose={() => setZoom(null)} />
+          <Lightbox zoom={zoom} onChange={setZoom} />
         </div>
       </BloomProvider>
     </MotionConfig>

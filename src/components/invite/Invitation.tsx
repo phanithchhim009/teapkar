@@ -1,7 +1,7 @@
 "use client";
 
-import { AnimatePresence, motion, MotionConfig, useScroll } from "framer-motion";
-import { MapPin, Music, VolumeX } from "lucide-react";
+import { AnimatePresence, motion, MotionConfig, useMotionValueEvent, useScroll } from "framer-motion";
+import { Check, ChevronDown, Copy, MapPin, Music, VolumeX } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { trackOpen } from "@/app/actions/guest";
@@ -67,7 +67,10 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
   const audio = useRef<HTMLAudioElement>(null);
   const tracked = useRef(false);
   const pausedForVideo = useRef(false);
-  const { scrollYProgress } = useScroll();
+  const { scrollY, scrollYProgress } = useScroll();
+  const [scrolled, setScrolled] = useState(false);
+  const [copied, setCopied] = useState(false);
+  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 40));
 
   const t = labelsFor(lang, event.type);
   const text = lang === "kh" ? event.text_kh : event.text_en;
@@ -129,11 +132,32 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
   const story = c.story.filter((s) => s.photo || s.title_kh || s.title_en || s.text_kh || s.text_en);
   const videos = c.videos.filter((v) => v.src);
 
+  const copyAccount = () =>
+    navigator.clipboard
+      ?.writeText(c.accountNumber.replace(/\s+/g, ""))
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => {});
+
   const angkor = c.theme === "angkor";
+  const royal = c.theme === "royal";
   const parents = weddingParents(event, text);
   const gradient = angkor
     ? `linear-gradient(180deg, #f8f1e3, #efe1c3)`
-    : `linear-gradient(160deg, #fffaf2, color-mix(in srgb, ${c.primaryColor} 25%, #fff))`;
+    : royal
+      ? `linear-gradient(160deg, #fffaf0, #f4e2c3)`
+      : `linear-gradient(160deg, #fffaf2, color-mix(in srgb, ${c.primaryColor} 18%, #fff))`;
+  const petalColor = royal ? "#c9a227" : `color-mix(in srgb, ${c.primaryColor} 55%, #fff)`;
+  // The couple's photo opens the page once the cover lifts; without one, the text block is the first screen.
+  const heroPhoto = c.coverBackground || c.gallery[0] || "";
+  // First-screen content waits for the cover to lift, so the guest actually sees it arrive.
+  const enter = (delay = 0) => ({
+    initial: { opacity: 0, y: 20 },
+    animate: opened ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 },
+    transition: { duration: 0.7, ease: "easeOut" as const, delay: opened ? 0.35 + delay : 0 },
+  });
   // Dawn over the moat at Angkor Wat.
   const sunrise = "linear-gradient(180deg, #f3d6a6 0%, #f9ead0 40%, #f4e5c8 72%, #e8d3ab 100%)";
   // Section helpers: sandstone texture + lotus-petal frieze on top in the Angkor theme.
@@ -163,6 +187,17 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
                 animate={{ scale: 1.12 }}
                 transition={{ duration: 20, ease: "linear" }}
               />
+              {/* Soft light wash at the top and bottom so the dark lettering stays readable over a photo. */}
+              {c.coverBackground && (
+                <div
+                  aria-hidden
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(180deg, rgb(255 250 242 / 0.88) 0%, rgb(255 250 242 / 0.55) 28%, rgb(255 250 242 / 0) 45%, rgb(255 250 242 / 0) 58%, rgb(255 250 242 / 0.7) 75%, rgb(255 250 242 / 0.92) 100%)",
+                  }}
+                />
+              )}
               {!angkor && (
                 <>
                   {/* Double frame */}
@@ -204,6 +239,13 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
                       }
                     />
                   </p>
+                </div>
+              )}
+
+              {/* Without a cover photo, the date fills the middle of the card instead of empty space. */}
+              {!angkor && !c.coverBackground && event.event_date && (
+                <div className="relative w-full">
+                  <SaveTheDate date={event.event_date} lang={lang} label={t.saveTheDate} />
                 </div>
               )}
 
@@ -269,11 +311,63 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
           </div>
         )}
 
-        <Petals color={c.primaryColor} />
+        {/* ---------- Scroll hint, until the guest starts scrolling ---------- */}
+        <AnimatePresence>
+          {opened && !scrolled && heroPhoto && (
+            <motion.div
+              aria-hidden
+              className="pointer-events-none fixed inset-x-0 bottom-6 z-30 mx-auto flex max-w-[480px] justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { delay: 1.6 } }}
+              exit={{ opacity: 0 }}
+            >
+              <ChevronDown size={30} className="scroll-cue text-white drop-shadow" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <Petals color={petalColor} />
+
+        {/* ---------- Hero photo ---------- */}
+        {heroPhoto && (
+          <section className="relative flex min-h-[100svh] flex-col justify-end overflow-hidden text-center text-white">
+            <Image src={heroPhoto} alt="" fill priority unoptimized={unoptimized(heroPhoto)} sizes="(max-width: 480px) 100vw, 480px" className="object-cover" />
+            <div aria-hidden className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgb(0 0 0 / 0) 40%, rgb(0 0 0 / 0.7) 100%)" }} />
+            <div className="relative space-y-3 px-6 pb-24 [text-shadow:0_2px_12px_rgb(0_0_0/0.45)]">
+              <motion.p {...enter(0)} className="font-title text-lg leading-relaxed">
+                {text.main_title}
+              </motion.p>
+              <motion.p {...enter(0.15)} className="font-title text-3xl leading-loose">
+                <Hosts
+                  event={event}
+                  amp={
+                    <span className="font-script mx-3 text-4xl" style={{ color: "color-mix(in srgb, var(--primary) 35%, #fff)" }}>
+                      &amp;
+                    </span>
+                  }
+                />
+              </motion.p>
+              {text.date_time && (
+                <motion.p {...enter(0.3)} className="text-sm leading-7">
+                  {text.date_time}
+                </motion.p>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ---------- Main ---------- */}
         <section className={sec("relative bg-cover bg-center px-6 py-16 text-center")} style={bg(c.mainBackground, gradient)}>
-          <Reveal className="space-y-5">
+          {/* With a hero photo this block is below the fold, so it reveals on scroll; otherwise it is the first screen. */}
+          {heroPhoto ? (
+            <Reveal className="space-y-3">
+              <p className="text-sm">{text.subtitle}</p>
+              <p className="font-title text-lg" style={{ color: "var(--guest)" }}>
+                {guest.name}
+              </p>
+            </Reveal>
+          ) : (
+          <motion.div {...enter(0)} className="space-y-5">
             {angkor ? (
               <div className="relative mx-auto w-full max-w-[300px]" style={{ color: "var(--primary)" }}>
                 <NagaArch className="w-full" />
@@ -299,15 +393,21 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
             <p className="font-title text-lg" style={{ color: "var(--guest)" }}>
               {guest.name}
             </p>
-          </Reveal>
-
-          {event.event_date && (
-            <Reveal className="mt-8" delay={0.05}>
-              <SaveTheDate date={event.event_date} lang={lang} label={t.saveTheDate} />
-            </Reveal>
+          </motion.div>
           )}
 
-          <Reveal className="card mt-8 space-y-4 p-5" delay={0.1}>
+          {event.event_date &&
+            (heroPhoto ? (
+              <Reveal className="mt-8">
+                <SaveTheDate date={event.event_date} lang={lang} label={t.saveTheDate} />
+              </Reveal>
+            ) : (
+              <motion.div {...enter(0.2)} className="mt-8">
+                <SaveTheDate date={event.event_date} lang={lang} label={t.saveTheDate} />
+              </motion.div>
+            ))}
+
+          <Reveal className="card mt-8 space-y-4 p-5" delay={0.05}>
             {parents && (
               <>
                 <ParentsGrid
@@ -325,7 +425,10 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
             </p>
             <p className="whitespace-pre-line text-sm leading-7">{text.invitation_message}</p>
             <div className="divider" />
-            <p className="text-sm font-semibold leading-7">{text.date_time}</p>
+            <div>
+              <p className="text-sm font-semibold leading-7">{text.date_time}</p>
+              {text.lunar_date && <p className="text-xs leading-6">{text.lunar_date}</p>}
+            </div>
             <p className="flex items-start justify-center gap-1 text-sm leading-7">
               <MapPin size={16} className="mt-1.5 shrink-0" style={{ color: "var(--primary)" }} />
               {text.location}
@@ -392,7 +495,16 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
 
         {/* ---------- Pre-wedding video ---------- */}
         {sections.video && videos.length > 0 && (
-          <section className="px-4 py-14" style={{ background: "linear-gradient(180deg, #1c1917, #0c0a09)" }}>
+          <section
+            className="px-4 py-14"
+            // Dark backdrop: lighten the accent so a deep colour (Royal maroon) stays readable on it.
+            style={
+              {
+                background: "linear-gradient(180deg, #1c1917, #0c0a09)",
+                "--primary": royal ? "#d9b36b" : `color-mix(in srgb, ${c.primaryColor} 45%, #f3dcae)`,
+              } as React.CSSProperties
+            }
+          >
             <Reveal>
               <SectionTitle angkor={angkor}>{t.video}</SectionTitle>
             </Reveal>
@@ -497,7 +609,14 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
                 <div className="card mt-3 p-3 text-center text-sm">
                   {c.bankName && <p className="font-semibold">{c.bankName}</p>}
                   {c.accountName && <p>{c.accountName}</p>}
-                  {c.accountNumber && <p className="tabular-nums">{c.accountNumber}</p>}
+                  {c.accountNumber && (
+                    <button onClick={copyAccount} className="mx-auto mt-1 flex items-center gap-2 tabular-nums" aria-label={`${t.copy} ${c.accountNumber}`}>
+                      {c.accountNumber}
+                      <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs" style={{ background: "color-mix(in srgb, var(--primary) 12%, #fff)", color: "var(--primary)" }}>
+                        {copied ? <Check size={12} /> : <Copy size={12} />} {copied ? t.copied : t.copy}
+                      </span>
+                    </button>
+                  )}
                 </div>
               )}
               <p className="mt-2 text-center text-xs opacity-70">{t.giftNote}</p>
@@ -543,10 +662,11 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
 }
 
 function Petals({ color }: { color: string }) {
-  // Deterministic positions so server and client render the same markup.
-  const petals = Array.from({ length: 10 }, (_, i) => ({
-    left: (i * 37) % 100,
-    size: 8 + ((i * 7) % 8),
+  // Deterministic positions so server and client render the same markup. Six small, soft petals: enough to feel
+  // alive without covering text or costing frames on cheaper phones.
+  const petals = Array.from({ length: 6 }, (_, i) => ({
+    left: 6 + ((i * 37) % 88),
+    size: 7 + ((i * 5) % 6),
     duration: 12 + ((i * 5) % 10),
     delay: (i * 1.7) % 12,
   }));
@@ -555,7 +675,7 @@ function Petals({ color }: { color: string }) {
       {petals.map((p, i) => (
         <span
           key={i}
-          className="petal absolute -bottom-6 rounded-[50%_0_50%_0] opacity-70"
+          className="petal absolute -bottom-6 rounded-[50%_0_50%_0] opacity-50"
           style={{
             left: `${p.left}%`,
             width: p.size,

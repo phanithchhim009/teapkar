@@ -18,8 +18,8 @@ body {
 
 /* ---------- invitation theme (variables set inline from event config) ---------- */
 .invite {
-  --primary: #f9af59;
-  --text: #b08e4f;
+  --primary: #b5651d;
+  --text: #7a5a2e;
   --guest: #364153;
   --radius: 8px;
   --font-title: "Moul";
@@ -36,9 +36,9 @@ body {
   color: #fff;
   border-radius: var(--radius);
 }
+/* No backdrop blur: it costs ~10 fps while scrolling on mid-range Android, and a near-opaque card looks the same. */
 .invite .card {
-  background: rgb(255 255 255 / 0.85);
-  backdrop-filter: blur(6px);
+  background: rgb(255 255 255 / 0.92);
   border-radius: var(--radius);
   border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
 }
@@ -51,10 +51,18 @@ body {
   from { transform: translateY(0); opacity: 0.9; }
   to { transform: translateY(-110vh); opacity: 0; }
 }
-.petal { animation: float-up linear infinite; }
+.petal { animation: float-up linear infinite; will-change: transform; }
+
+/* Scroll hint on the first screen. */
+@keyframes nudge-down {
+  0%, 100% { transform: translateY(0); opacity: 0.85; }
+  50% { transform: translateY(6px); opacity: 1; }
+}
+.scroll-cue { animation: nudge-down 1.6s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   .petal { animation: none; display: none; }
+  .scroll-cue { animation: none; }
 }
 
 /* ---------- "angkor" theme: carved sandstone, gilding, kbach ornament ---------- */
@@ -396,6 +404,10 @@ body {
   to { opacity: 1; transform: scale(1.08); }
 }
 
+/* Shared story timeline and video player: gold to match the lettering instead of the olive --primary,
+   darkened so the white date and play icon on it stay legible. */
+.theme-lotus :is(.lt-timeline, .lt-films) { --primary: color-mix(in srgb, var(--lt-gold-deep) 85%, #000); }
+
 .theme-lotus .lt-noscroll { scrollbar-width: none; }
 .theme-lotus .lt-noscroll::-webkit-scrollbar { display: none; }
 
@@ -499,6 +511,11 @@ body {
   color: #fff;
   border-radius: 12px;
   background: var(--gd-green);
+}
+/* Pre-wedding films framed like the gallery photos. */
+.theme-garden .gd-films .card {
+  border: 4px solid #fff;
+  box-shadow: 0 18px 34px -18px rgb(40 50 45 / 0.55);
 }
 
 /* Ivy sways gently from where it hangs. */

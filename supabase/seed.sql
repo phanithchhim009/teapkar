@@ -7,8 +7,8 @@ values (
   'សន លក្ខណា',
   '2026-12-20T17:00:00+07:00',
   '{
-    "primaryColor": "#f9af59",
-    "textColor": "#B08E4F",
+    "primaryColor": "#b5651d",
+    "textColor": "#7a5a2e",
     "guestNameColor": "#364153",
     "fontKh": "Moul",
     "fontBodyKh": "Battambang",
@@ -69,7 +69,7 @@ from d, (values
   ('07:00 AM', 'ហែជំនូន', 0),
   ('08:00 AM', 'កាត់សក់', 1),
   ('12:00 PM', 'ចងដៃ', 2),
-  ('05:00 PM', 'ពិសារភោជនាហារ', 3)
+  ('05:00 PM', 'ពិសាភោជនាហារ', 3)
 ) as t(time, name, sort);
 
 insert into public.guest (event_id, code, name, group_tag) values (1, 'demo2026', 'Vibol Khan', 'Friends')

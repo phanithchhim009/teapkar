@@ -1,5 +1,6 @@
 import { EventTabs } from "@/components/admin/EventTabs";
 import { listEventNames, requireEvent } from "@/lib/admin-data";
+import { requireUser } from "@/lib/auth";
 import { EVENT_TYPE_INFO, hostsLabel } from "@/lib/event-types";
 
 export default async function EventLayout({
@@ -10,7 +11,7 @@ export default async function EventLayout({
   params: Promise<{ eventId: string }>;
 }) {
   const event = await requireEvent((await params).eventId);
-  const events = await listEventNames();
+  const events = await listEventNames(await requireUser());
   return (
     <div className="space-y-6">
       <EventTabs

@@ -1,7 +1,7 @@
 import { FontLinks } from "@/components/invite/FontLinks";
 import { Invitation } from "@/components/invite/Invitation";
 import { requireEvent } from "@/lib/admin-data";
-import { requireAdmin } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { getAgenda, getApprovedWishes } from "@/lib/event";
 import { THEMES, THEME_PRESETS, type Theme } from "@/lib/types";
 
@@ -10,9 +10,9 @@ export const metadata = { title: "Preview", robots: { index: false } };
 
 type Props = { params: Promise<{ eventId: string }>; searchParams: Promise<{ lang?: string; theme?: string }> };
 
-/** Admin-only preview of one event with a sample guest. Nothing is tracked or saved. */
+/** Signed-in preview of one event (customers only their own; requireEvent checks) with a sample guest. Nothing is tracked or saved. */
 export default async function PreviewPage({ params, searchParams }: Props) {
-  await requireAdmin();
+  await requireUser();
   const { lang, theme } = await searchParams;
   const saved = await requireEvent((await params).eventId);
   // `?theme=` renders the event in another style (the theme picker's thumbnails), applying its preset like picking it would.

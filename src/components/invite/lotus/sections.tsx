@@ -4,13 +4,16 @@ import { AnimatePresence, motion, useInView, useScroll } from "framer-motion";
 import { CalendarPlus, Download, MapPin } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { EventConfig, LotusStory, ScheduleDay } from "@/lib/types";
+import type { EventConfig, LotusStory, ScheduleDay, StoryItem, Video } from "@/lib/types";
 import { diff } from "../Countdown";
 import { dateParts, khDigits, shortStamp } from "../bloom/date";
 import type { InviteGuest } from "../Invitation";
+import type { Zoom } from "../Lightbox";
 import { unoptimized } from "../media";
 import { RollingDigits } from "../RollingDigits";
 import { Rsvp } from "../Rsvp";
+import { Story as StoryTimeline } from "../Story";
+import { Videos } from "../Videos";
 import { useWishes, type PublicWish } from "../Wishes";
 import { Candle, CornerFlourish, GoldRule, LotusIcon, ScallopPhoto } from "./Art";
 import { CORNERS } from "./Envelope";
@@ -443,6 +446,29 @@ export function Story({ items, onOpen }: { items: LotusStory[]; onOpen: (src: st
         )}
       </div>
     </section>
+  );
+}
+
+/* ---------------------------------------------------------------- Shared story timeline + pre-wedding films */
+
+/** The shared timeline, used when the couple hasn't built Lotus's own photo story. */
+export function Timeline({ items, onZoom }: { items: StoryItem[]; onZoom: (z: Zoom) => void }) {
+  const { t, lang } = useLotus();
+  return (
+    <Section id="story" tone="cream" className="lt-timeline">
+      <Heading lotus>{t.story}</Heading>
+      <StoryTimeline items={items} lang={lang} onZoom={onZoom} />
+    </Section>
+  );
+}
+
+export function Films({ videos, onPlay, onStop }: { videos: Video[]; onPlay: () => void; onStop: () => void }) {
+  const { t } = useLotus();
+  return (
+    <Section id="video" tone="night" className="lt-films px-4">
+      <Heading>{t.video}</Heading>
+      <Videos videos={videos} t={t} onPlay={onPlay} onStop={onStop} />
+    </Section>
   );
 }
 

@@ -40,7 +40,7 @@ npm run dev
 ## Deploy (Supabase Cloud + Vercel)
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. In **SQL Editor**, run the files in `supabase/migrations/` in order (`0001` → `0005`), then `supabase/seed.sql` for the default content. Delete the `demo2026` guest afterwards. You can also run `supabase link && supabase db push`.
+2. In **SQL Editor**, run the files in `supabase/migrations/` in order (`0001` → `0006`), then `supabase/seed.sql` for the default content. Delete the `demo2026` guest afterwards. You can also run `supabase link && supabase db push`.
 3. Push this repo to GitHub and import it into [Vercel](https://vercel.com).
 4. Set these environment variables in Vercel:
 
@@ -116,13 +116,17 @@ Picking the theme also sets Moulpali and Battambang. Code lives in `src/componen
 
 `supabase/migrations/0004_multi_event.sql` turns the single event into event `1` and gives guests, agenda days and wishes an `event_id`, so existing guest links keep working. It also renames `groom`/`bride` to `host_a`/`host_b` and replaces `save_agenda(jsonb)` with `save_agenda(event_id, jsonb)`. Run it in the SQL Editor (or `supabase db push`) **before** deploying this version of the app.
 
+## Customer accounts
+
+Sign in with an **empty username** and `ADMIN_PASSWORD` to manage everything as the site owner. Under **Accounts** you create a login for each couple and give it their event; the generated password is shown once, ready to copy or send on Telegram. A customer signs in with their username and password and can only see and edit their own event(s): guests, design, story, video, uploads and wishes. Creating and deleting events and managing accounts stay owner-only. **New password** on an account replaces the password and signs that customer out everywhere; deleting an account keeps its events. This needs `supabase/migrations/0006_accounts.sql`.
+
 ## Security notes
 
 - Every database read and write goes through server code using the service-role key. RLS is enabled with no public policies, so the anon key gives no access.
 - Guest codes are 8 random characters (about 47 bits). A link works as an unguessable token, so treat it like a password-less invite.
 - Each guest can post at most 5 wishes (enforced by a database trigger).
-- Uploads are admin-only: the server checks the file and hands the browser a one-time signed URL, and the file goes straight to Storage (this avoids Vercel's 4.5 MB request limit). The `media` bucket itself accepts only images and audio (no SVG) up to 15 MB.
-- Admin login allows 10 failed attempts per IP every 15 minutes. Sessions last 7 days; to sign out every device, change `SESSION_SECRET`.
+- Uploads need a signed-in user: the server checks the file and hands the browser a one-time signed URL, and the file goes straight to Storage (this avoids Vercel's 4.5 MB request limit). The `media` bucket itself accepts only images, audio and short videos (no SVG), up to 15 MB for images/audio and 50 MB for video.
+- Sign-in allows 10 failed attempts per IP every 15 minutes. Customer passwords are stored only as scrypt hashes. Every customer action and page checks the event belongs to that account. Sessions last 7 days; a customer's sessions end when their password is reset or the account is deleted; to sign out every device (including the owner), change `SESSION_SECRET`.
 
 ## Project layout
 

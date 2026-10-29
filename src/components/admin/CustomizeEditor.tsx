@@ -11,6 +11,7 @@ import {
   KH_FONTS,
   SECTION_KEYS,
   TEXT_FIELDS,
+  LOTUS_PALETTES,
   THEME_PRESETS,
   type Theme,
   type BloomConfig,
@@ -41,12 +42,14 @@ const TEXT_LABELS: Record<(typeof TEXT_FIELDS)[number], string> = {
   invitation_title: "Invitation title",
   invitation_message: "Invitation message",
   date_time: "Date & time (display text)",
+  lunar_date: "Lunar date (optional)",
   location: "Location (display text)",
   details_title: "Agenda title",
   gratitude_title: "Gratitude title",
   gratitude_message: "Gratitude message",
 };
 const LONG_TEXT = new Set<keyof InvitationText>(["invitation_message", "gratitude_message", "location"]);
+const LUNAR_HINT = "Shown under the date. Copy it from a Khmer calendar; leave empty to hide it.";
 
 const SECTION_LABELS: Record<(typeof SECTION_KEYS)[number], string> = {
   countdown: "Countdown timer",
@@ -75,7 +78,8 @@ function fromLocalInput(value: string) {
 }
 
 const THEME_OPTIONS: { id: Theme; name: string; desc: string }[] = [
-  { id: "classic", name: "Classic", desc: "Soft cream and peach with floating petals" },
+  { id: "classic", name: "Classic", desc: "Warm cream and amber with floating petals" },
+  { id: "royal", name: "Royal red & gold", desc: "Traditional Khmer wedding maroon and gold on ivory" },
   { id: "angkor", name: "Angkor temple", desc: "Sandstone and gold: Angkor Wat skyline, naga arch, lotus and kbach ornament" },
   { id: "bloom", name: "Bloom", desc: "Watercolor florals and gold lettering, with an animated arch intro and scroll reveals" },
   { id: "lotus", name: "Lotus envelope", desc: "Olive envelope with a gold lotus seal that opens; gold on cream, olive and night, love story, candles" },
@@ -234,11 +238,15 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
               ))}
             </div>
             {TEXT_FIELDS.map((k) => (
-              <Field key={`${lang}-${k}`} label={TEXT_LABELS[k]}>
+              <Field key={`${lang}-${k}`} label={TEXT_LABELS[k]} hint={k === "lunar_date" ? LUNAR_HINT : undefined}>
                 {LONG_TEXT.has(k) ? (
                   <Textarea rows={k === "location" ? 2 : 5} value={data[txtKey][k]} onChange={(e) => setText(k, e.target.value)} />
                 ) : (
-                  <Input value={data[txtKey][k]} onChange={(e) => setText(k, e.target.value)} />
+                  <Input
+                    value={data[txtKey][k]}
+                    onChange={(e) => setText(k, e.target.value)}
+                    placeholder={k === "lunar_date" && lang === "kh" ? "ថ្ងៃអាទិត្យ ១កើត ខែមិគសិរ ឆ្នាំមមី អដ្ឋស័ក ព.ស. ២៥៧០" : undefined}
+                  />
                 )}
               </Field>
             ))}
@@ -286,9 +294,9 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
 
         {tab === "Agenda" && <AgendaEditor eventId={data.id} initial={agenda} onSaved={() => setPreviewKey((k) => k + 1)} />}
 
-        {(tab === "Story" || tab === "Video") && (bloom || lotus || garden) && (
+        {tab === "Story" && lotus && (
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            The {tab.toLowerCase()} section shows on the Classic and Angkor styles. The current style doesn&apos;t display it yet.
+            Lotus shows its own photo story (Media tab) when you&apos;ve added one; otherwise it shows this timeline.
           </p>
         )}
 
@@ -344,7 +352,14 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
               </Field>
             </div>
             {bloom && <BloomOptions value={data.config.bloom} set={bcfg} />}
-            {lotus && <LotusOptions value={data.config.lotus} set={lcfg} />}
+            {lotus && (
+              <LotusOptions
+                value={data.config.lotus}
+                set={lcfg}
+                textColor={data.config.textColor}
+                applyPalette={(p) => patch({ config: { ...data.config, textColor: p.textColor, lotus: { ...data.config.lotus, ...p.colors } } })}
+              />
+            )}
             {garden && <GardenOptions value={data.config.garden} set={gcfg} />}
           </Card>
         )}
@@ -530,12 +545,48 @@ function BloomOptions({ value: b, set }: { value: BloomConfig; set: <K extends k
   );
 }
 
-function LotusOptions({ value: l, set }: { value: LotusConfig; set: <K extends keyof LotusConfig>(k: K, v: LotusConfig[K]) => void }) {
+function LotusOptions({
+  value: l,
+  set,
+  textColor,
+  applyPalette,
+}: {
+  value: LotusConfig;
+  set: <K extends keyof LotusConfig>(k: K, v: LotusConfig[K]) => void;
+  textColor: string;
+  applyPalette: (p: (typeof LOTUS_PALETTES)[number]) => void;
+}) {
+  const current = LOTUS_PALETTES.find((p) => p.colors.olive === l.olive && p.colors.night === l.night && p.textColor === textColor)?.id;
   return (
     <div className="space-y-4 border-t border-neutral-100 pt-5">
       <h3 className="text-sm font-semibold">Lotus options</h3>
+      {/* Not a <Field>: that is a <label>, which would forward stray clicks to the first button. */}
+      <div className="space-y-1.5" role="group" aria-label="Colour palette">
+        <span className="text-sm font-medium text-neutral-700">Colour palette</span>
+        <div className="flex flex-wrap gap-2">
+          {LOTUS_PALETTES.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              aria-pressed={current === p.id}
+              onClick={() => applyPalette(p)}
+              className={cx(
+                "flex items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-sm",
+                current === p.id ? "border-rose-600 ring-2 ring-rose-200" : "border-neutral-200 hover:border-neutral-400",
+              )}
+            >
+              <span className="flex overflow-hidden rounded-full border border-black/10">
+                {[p.colors.olive, p.colors.night, p.colors.cream, p.colors.gold].map((c) => (
+                  <span key={c} className="h-6 w-4" style={{ background: c }} />
+                ))}
+              </span>
+              {p.name}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="grid gap-4 sm:grid-cols-3">
-        <ColorField label="Olive (envelope, sections)" value={l.olive} onChange={(v) => set("olive", v)} />
+        <ColorField label="Main colour (envelope, sections)" value={l.olive} onChange={(v) => set("olive", v)} />
         <ColorField label="Night (agenda, thanks)" value={l.night} onChange={(v) => set("night", v)} />
         <ColorField label="Cream (paper)" value={l.cream} onChange={(v) => set("cream", v)} />
         <ColorField label="Gold" value={l.gold} onChange={(v) => set("gold", v)} />

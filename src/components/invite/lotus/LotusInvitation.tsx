@@ -7,14 +7,14 @@ import { trackOpen } from "@/app/actions/guest";
 import { EVENT_TYPE_INFO, eventHosts, shareTitle } from "@/lib/event-types";
 import type { EventData, ScheduleDay } from "@/lib/types";
 import type { InviteGuest } from "../Invitation";
-import { labelsFor, type Lang } from "../i18n";
+import { labelsFor, withLunar, type Lang } from "../i18n";
 import { downloadIcs } from "../calendar";
-import { Lightbox } from "../Lightbox";
+import { Lightbox, type Zoom } from "../Lightbox";
 import { weddingParents } from "../parents";
 import type { PublicWish } from "../Wishes";
 import { LotusIcon } from "./Art";
 import { Envelope } from "./Envelope";
-import { Agenda, Couple, Family, Gallery, Gift, Hero, LotusCountdown, Location, Messages, Story, Thanks, Water } from "./sections";
+import { Agenda, Couple, Family, Films, Gallery, Gift, Hero, LotusCountdown, Location, Messages, Story, Thanks, Timeline, Water } from "./sections";
 import { LotusProvider } from "./ui";
 
 type Props = {
@@ -37,9 +37,11 @@ export function LotusInvitation({ event, agenda, guest, wishes, initialLang, pre
   const [lang, setLang] = useState<Lang>(initialLang);
   const [opened, setOpened] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [zoom, setZoom] = useState<string | null>(null);
+  const [zoom, setZoom] = useState<Zoom>(null);
+  const zoomOne = (src: string) => setZoom({ images: [src], index: 0 });
   const audio = useRef<HTMLAudioElement>(null);
   const tracked = useRef(false);
+  const pausedForVideo = useRef(false);
 
   const t = labelsFor(lang, event.type);
   const text = lang === "kh" ? event.text_kh : event.text_en;
@@ -58,7 +60,12 @@ export function LotusInvitation({ event, agenda, guest, wishes, initialLang, pre
   const arch = l.archPhoto || g[1] || hero;
   const couple = l.couplePhoto || g[2] || hero;
   const water = l.waterPhoto || g[3] || g[0] || "";
-  const story = l.story.length ? l.story.filter((s) => s.src) : g.slice(0, 6).map((src) => ({ src, kh: "", en: "" }));
+  // Lotus's own photo story wins; without one, the shared timeline tells the story, and only failing that does
+  // the carousel borrow gallery photos (both are titled "Our story", so never show two).
+  const timeline = c.story.filter((s) => s.photo || s.title_kh || s.title_en || s.text_kh || s.text_en);
+  const showTimeline = sections.story && timeline.length > 0 && !l.story.some((s) => s.src);
+  const story = l.story.length ? l.story.filter((s) => s.src) : showTimeline ? [] : g.slice(0, 6).map((src) => ({ src, kh: "", en: "" }));
+  const videos = c.videos.filter((v) => v.src);
 
   useEffect(() => {
     if (preview || tracked.current) return;
@@ -96,11 +103,26 @@ export function LotusInvitation({ event, agenda, guest, wishes, initialLang, pre
   const toggleMusic = () => {
     const a = audio.current;
     if (!a) return;
+    pausedForVideo.current = false;
     if (a.paused) a.play().then(() => setPlaying(true)).catch(() => {});
     else {
       a.pause();
       setPlaying(false);
     }
+  };
+
+  // Hush the background music while a video plays, and bring it back afterwards if we were the ones who stopped it.
+  const videoStarted = () => {
+    const a = audio.current;
+    if (!a || a.paused) return;
+    a.pause();
+    setPlaying(false);
+    pausedForVideo.current = true;
+  };
+  const videoStopped = () => {
+    if (!pausedForVideo.current) return;
+    pausedForVideo.current = false;
+    audio.current?.play().then(() => setPlaying(true)).catch(() => {});
   };
 
   const vars = useMemo(
@@ -148,7 +170,7 @@ export function LotusInvitation({ event, agenda, guest, wishes, initialLang, pre
               greeting={text.subtitle || t.dear}
               guestName={guest.name}
               date={event.event_date}
-              dateText={text.date_time}
+              dateText={withLunar(text)}
               location={text.location}
             />
             <Family
@@ -163,13 +185,15 @@ export function LotusInvitation({ event, agenda, guest, wishes, initialLang, pre
             {pair && <Couple photo={couple} hosts={hosts as [string, string]} />}
             {sections.countdown && event.event_date && <LotusCountdown date={event.event_date} watermark={hosts.join(" ")} />}
             {sections.agenda && agenda.length > 0 && <Agenda title={text.details_title || t.schedule} agenda={agenda} />}
-            {sections.gallery && story.length > 0 && <Story items={story} onOpen={setZoom} />}
+            {sections.gallery && story.length > 0 && <Story items={story} onOpen={zoomOne} />}
+            {showTimeline && <Timeline items={timeline} onZoom={setZoom} />}
+            {sections.video && videos.length > 0 && <Films videos={videos} onPlay={videoStarted} onStop={videoStopped} />}
             {l.water && water && <Water photo={water} />}
-            {sections.gallery && g.length > 0 && <Gallery photos={g} onOpen={setZoom} />}
+            {sections.gallery && g.length > 0 && <Gallery photos={g} onOpen={zoomOne} />}
             {sections.map && (c.mapUrl || c.mapImage || l.mapEmbed) && (
               <Location location={text.location} mapUrl={c.mapUrl} mapImage={c.mapImage} mapEmbed={l.mapEmbed} onCalendar={calendar} />
             )}
-            {sections.gift && (c.qrUsd || c.qrKhr) && <Gift config={c} onZoom={setZoom} />}
+            {sections.gift && (c.qrUsd || c.qrKhr) && <Gift config={c} onZoom={zoomOne} />}
             {(showRsvp || showWishes) && (
               <Messages
                 code={guest.code}
@@ -242,7 +266,7 @@ export function LotusInvitation({ event, agenda, guest, wishes, initialLang, pre
             )}
           </AnimatePresence>
 
-          <Lightbox src={zoom} onClose={() => setZoom(null)} />
+          <Lightbox zoom={zoom} onChange={setZoom} />
         </div>
       </LotusProvider>
     </MotionConfig>

@@ -41,7 +41,8 @@ function CardPending() {
 
 const newEventLink = "inline-flex h-10 items-center gap-1.5 rounded-lg bg-rose-600 px-4 text-sm font-medium text-white hover:bg-rose-700";
 
-export function EventList({ events, now }: { events: EventSummary[]; now: number }) {
+/** `canManage` (site owner): create, duplicate and delete events. Customers only open theirs. */
+export function EventList({ events, now, canManage }: { events: EventSummary[]; now: number; canManage: boolean }) {
   const [deleting, setDeleting] = useState<EventSummary | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("All");
@@ -66,9 +67,11 @@ export function EventList({ events, now }: { events: EventSummary[]; now: number
             {events.length} event{events.length === 1 ? "" : "s"} · {upcoming} upcoming
           </p>
         </div>
-        <Link href="/admin/events/new" className={newEventLink}>
-          <Plus size={16} /> New event
-        </Link>
+        {canManage && (
+          <Link href="/admin/events/new" className={newEventLink}>
+            <Plus size={16} /> New event
+          </Link>
+        )}
       </div>
 
       {events.length === 0 ? (
@@ -76,11 +79,15 @@ export function EventList({ events, now }: { events: EventSummary[]; now: number
           <CalendarDays size={32} className="text-neutral-300" />
           <div>
             <p className="font-medium">No events yet</p>
-            <p className="text-sm text-neutral-500">Create one to design the invitation and start inviting guests.</p>
+            <p className="text-sm text-neutral-500">
+              {canManage ? "Create one to design the invitation and start inviting guests." : "Your invitation will appear here once it has been set up for you."}
+            </p>
           </div>
-          <Link href="/admin/events/new" className={newEventLink}>
-            <Plus size={16} /> New event
-          </Link>
+          {canManage && (
+            <Link href="/admin/events/new" className={newEventLink}>
+              <Plus size={16} /> New event
+            </Link>
+          )}
         </Card>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
@@ -167,6 +174,7 @@ export function EventList({ events, now }: { events: EventSummary[]; now: number
 
                 <div className="mt-auto flex items-center justify-between gap-1 border-t border-neutral-100 pt-2">
                   <span className="text-sm font-medium text-rose-700">Manage →</span>
+                  {canManage && (
                   <div className="relative z-10 flex gap-0.5">
                     <Link
                       href={`/admin/events/new?copy=${ev.id}`}
@@ -187,6 +195,7 @@ export function EventList({ events, now }: { events: EventSummary[]; now: number
                       <Trash2 size={15} />
                     </Button>
                   </div>
+                  )}
                 </div>
               </div>
             </Card>

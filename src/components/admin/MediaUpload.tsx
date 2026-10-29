@@ -6,8 +6,41 @@ import { createUpload } from "@/app/actions/admin";
 import { unwrap } from "@/lib/action-result";
 import { parseYouTube, youTubeThumb } from "@/lib/video";
 
+const SHRINKABLE = /^image\/(jpeg|png|webp)$/;
+const MAX_SIDE = 2000;
+
+function toBlob(canvas: HTMLCanvasElement, type: string) {
+  return new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.85));
+}
+
+/**
+ * Phone photos are often 5–10 MB; guests on mobile data would wait for every one. Scale large photos down to
+ * 2000px and re-encode as WebP (keeps PNG transparency). Anything that fails, or doesn't get smaller, uploads as-is.
+ */
+async function shrinkImage(file: File): Promise<File> {
+  if (!SHRINKABLE.test(file.type) || file.size < 600 * 1024) return file;
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    let blob = await toBlob(canvas, "image/webp");
+    // Safari can't encode WebP and hands back a PNG; for photos JPEG is the smaller fallback.
+    if (blob?.type !== "image/webp" && file.type === "image/jpeg") blob = await toBlob(canvas, "image/jpeg");
+    if (!blob || blob.size >= file.size) return file;
+    const ext = blob.type.split("/")[1] === "jpeg" ? "jpg" : blob.type.split("/")[1];
+    return new File([blob], `${file.name.replace(/\.[^.]+$/, "")}.${ext}`, { type: blob.type });
+  } catch {
+    return file;
+  }
+}
+
 /** Uploads straight to Supabase Storage via a signed URL; returns the file's public URL. */
-export async function uploadFile(file: File) {
+export async function uploadFile(original: File) {
+  const file = await shrinkImage(original);
   const { uploadUrl, publicUrl } = unwrap(await createUpload({ name: file.name, type: file.type, size: file.size }));
   const res = await fetch(uploadUrl, {
     method: "PUT",

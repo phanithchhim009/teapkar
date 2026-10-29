@@ -6,24 +6,41 @@ import { headers } from "next/headers";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { z } from "zod";
 import type { ActionResult } from "@/lib/action-result";
-import { createSession, destroySession, requireAdmin } from "@/lib/auth";
+import { canAccessEvent, createSession, destroySession, requireUser, type User } from "@/lib/auth";
+import { generatePassword, hashPassword, verifyPassword } from "@/lib/password";
+import type { SessionClaims } from "@/lib/session";
 import { eventTag, wishesTag } from "@/lib/event";
 import { EVENT_TYPE_INFO } from "@/lib/event-types";
 import { newGuestCode } from "@/lib/guest-code";
 import { db, MEDIA_BUCKET } from "@/lib/supabase/server";
 import { EVENT_TYPES, eventConfigSchema, invitationTextSchema, sectionsSchema } from "@/lib/types";
 
-/** Runs an admin action, returning failures as data so their messages reach the client in production. */
-async function adminAction<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
-  await requireAdmin();
+/** Runs an action for any signed-in user, returning failures as data so their messages reach the client in production. */
+async function userAction<T>(fn: (user: User) => Promise<T>): Promise<ActionResult<T>> {
+  const user = await requireUser();
   try {
-    return { ok: true, data: await fn() };
+    return { ok: true, data: await fn(user) };
   } catch (e) {
     unstable_rethrow(e);
     console.error(e);
     if (e instanceof z.ZodError) return { ok: false, error: z.prettifyError(e) };
     return { ok: false, error: e instanceof Error ? e.message : "Something went wrong" };
   }
+}
+
+/** Site-owner-only actions: creating/deleting events and managing customer accounts. */
+async function adminAction<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
+  return userAction(async (user) => {
+    if (user.role !== "admin") throw new Error("Only the site owner can do this.");
+    return fn();
+  });
+}
+
+/** Parses an event id and checks this user may edit that event; customers only get their own. */
+async function ownEvent(user: User, eventId: unknown) {
+  const ev = eventIdSchema.parse(eventId);
+  if (!(await canAccessEvent(user, ev))) throw new Error("Event not found");
+  return ev;
 }
 
 /* ---------- auth ---------- */
@@ -36,9 +53,25 @@ async function clientIp() {
   return h.get("x-forwarded-for")?.split(",")[0].trim() || h.get("x-real-ip") || "unknown";
 }
 
+/** Turns a failed first database call into a hint the person setting up the site can act on. */
+function setupProblem(err: { message: string; code?: string }) {
+  if (/fetch failed|ENOTFOUND|ECONNREFUSED/i.test(err.message)) return "Can't reach the database. Check NEXT_PUBLIC_SUPABASE_URL.";
+  if (/invalid api key|jwt/i.test(err.message)) return "The database rejected the key. Check SUPABASE_SERVICE_ROLE_KEY (use the service_role key).";
+  if (err.code === "PGRST205" || err.code === "42P01") return "The database isn't set up yet. Run the SQL files in supabase/migrations.";
+  return "Server error, please try again";
+}
+
+// Checked when the username doesn't exist, so a wrong username takes as long as a wrong password
+// and response times don't reveal which usernames are real.
+const DUMMY_HASH = `scrypt$${"0".repeat(32)}$${"0".repeat(128)}`;
+
+/** Empty username (or "admin") signs in the site owner with ADMIN_PASSWORD; anything else is a customer account. */
 export async function login(_: unknown, formData: FormData) {
+  const username = String(formData.get("username") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "").trim();
+  const asOwner = !username || username === "admin";
   const expectedRaw = (process.env.ADMIN_PASSWORD ?? "").trim();
-  if (!expectedRaw) {
+  if (asOwner && !expectedRaw) {
     console.error("ADMIN_PASSWORD is not set");
     return { error: "Admin login is not configured" };
   }
@@ -52,19 +85,30 @@ export async function login(_: unknown, formData: FormData) {
     .gte("at", since);
   if (countErr) {
     console.error("login_attempt lookup failed:", countErr.message);
-    return { error: "Server error, please try again" };
+    return { error: setupProblem(countErr) };
   }
   if ((count ?? 0) >= LOGIN_MAX_FAILURES) return { error: "Too many attempts. Try again in 15 minutes." };
 
-  const given = Buffer.from(String(formData.get("password") ?? "").trim());
-  const expected = Buffer.from(expectedRaw);
-  const ok = given.length === expected.length && timingSafeEqual(given, expected);
-  if (!ok) {
+  let claims: SessionClaims | null = null;
+  if (asOwner) {
+    const given = Buffer.from(password);
+    const expected = Buffer.from(expectedRaw);
+    if (given.length === expected.length && timingSafeEqual(given, expected)) claims = { role: "admin" };
+  } else {
+    const { data: account, error } = await db().from("account").select("id, password_hash, token_version").eq("username", username).maybeSingle();
+    if (error) {
+      console.error("account lookup failed:", error.message);
+      return { error: setupProblem(error) };
+    }
+    const ok = await verifyPassword(password, account?.password_hash ?? DUMMY_HASH);
+    if (ok && account) claims = { role: "customer", sub: account.id, v: account.token_version };
+  }
+  if (!claims) {
     await db().from("login_attempt").insert({ ip });
-    return { error: "Wrong password" };
+    return { error: asOwner ? "Wrong password" : "Wrong username or password" };
   }
   try {
-    await createSession();
+    await createSession(claims);
   } catch (e) {
     console.error("createSession failed:", e);
     return { error: "Server misconfigured (SESSION_SECRET)" };
@@ -217,16 +261,16 @@ async function insertWithCodes(eventId: number, rows: ReturnType<typeof clean>[]
 }
 
 export async function createGuest(eventId: number, input: GuestInput) {
-  return adminAction(async () => {
-    const ev = eventIdSchema.parse(eventId);
+  return userAction(async (user) => {
+    const ev = await ownEvent(user, eventId);
     await insertWithCodes(ev, [clean(input)]);
     revalidateEventAdmin(ev);
   });
 }
 
 export async function updateGuest(eventId: number, id: string, input: GuestInput) {
-  return adminAction(async () => {
-    const ev = eventIdSchema.parse(eventId);
+  return userAction(async (user) => {
+    const ev = await ownEvent(user, eventId);
     const { error } = await db().from("guest").update(clean(input)).eq("id", idSchema.parse(id)).eq("event_id", ev);
     if (error) throw new Error(error.message);
     revalidateEventAdmin(ev);
@@ -234,8 +278,8 @@ export async function updateGuest(eventId: number, id: string, input: GuestInput
 }
 
 export async function deleteGuests(eventId: number, ids: string[]) {
-  return adminAction(async () => {
-    const ev = eventIdSchema.parse(eventId);
+  return userAction(async (user) => {
+    const ev = await ownEvent(user, eventId);
     const { error } = await db().from("guest").delete().in("id", z.array(idSchema).parse(ids)).eq("event_id", ev);
     if (error) throw new Error(error.message);
     // Their wishes are deleted with them.
@@ -245,8 +289,8 @@ export async function deleteGuests(eventId: number, ids: string[]) {
 }
 
 export async function regenerateGuestCode(eventId: number, id: string) {
-  return adminAction(async () => {
-    const ev = eventIdSchema.parse(eventId);
+  return userAction(async (user) => {
+    const ev = await ownEvent(user, eventId);
     const { error } = await db()
       .from("guest")
       .update({ code: newGuestCode() })
@@ -258,8 +302,8 @@ export async function regenerateGuestCode(eventId: number, id: string) {
 }
 
 export async function bulkCreateGuests(eventId: number, rows: GuestInput[]) {
-  return adminAction(async () => {
-    const ev = eventIdSchema.parse(eventId);
+  return userAction(async (user) => {
+    const ev = await ownEvent(user, eventId);
     if (rows.length > MAX_BULK) throw new Error(`Too many rows (max ${MAX_BULK} per import)`);
     // Validate everything first and report every bad row, rather than failing on the first one.
     const problems: string[] = [];
@@ -281,8 +325,8 @@ export async function bulkCreateGuests(eventId: number, rows: GuestInput[]) {
 }
 
 export async function resetGuestRsvp(eventId: number, id: string) {
-  return adminAction(async () => {
-    const ev = eventIdSchema.parse(eventId);
+  return userAction(async (user) => {
+    const ev = await ownEvent(user, eventId);
     const { error } = await db()
       .from("guest")
       .update({ rsvp_status: "pending", rsvp_count: 0, rsvp_at: null })
@@ -306,8 +350,8 @@ const eventSchema = eventMetaSchema.extend({
 });
 
 export async function saveEvent(eventId: number, input: z.input<typeof eventSchema>) {
-  return adminAction(async () => {
-    const ev = eventIdSchema.parse(eventId);
+  return userAction(async (user) => {
+    const ev = await ownEvent(user, eventId);
     const data = eventSchema.parse(input);
     const { error, count } = await db()
       .from("event")
@@ -336,8 +380,8 @@ export type AgendaInput = z.input<typeof agendaSchema>;
 
 /** Replaces the event's whole agenda with the submitted one (days + items, in order), in one transaction. */
 export async function saveAgenda(eventId: number, input: AgendaInput) {
-  return adminAction(async () => {
-    const ev = eventIdSchema.parse(eventId);
+  return userAction(async (user) => {
+    const ev = await ownEvent(user, eventId);
     const days = agendaSchema.parse(input).map((d) => ({
       ...d,
       items: d.items.filter((it) => it.name.trim() || it.time.trim()),
@@ -360,7 +404,7 @@ const MAX_VIDEO_UPLOAD = 50 * 1024 * 1024;
  * would hit Vercel's 4.5 MB request body limit.
  */
 export async function createUpload(file: { name: string; type: string; size: number }) {
-  return adminAction(async () => {
+  return userAction(async () => {
     if (!ALLOWED_TYPES.test(file.type)) throw new Error(`Unsupported file type: ${file.type || "unknown"}`);
     const isVideo = file.type.startsWith("video/");
     if (file.size > (isVideo ? MAX_VIDEO_UPLOAD : MAX_UPLOAD)) throw new Error(`File too large (max ${isVideo ? 50 : 15}MB)`);
@@ -376,8 +420,8 @@ export async function createUpload(file: { name: string; type: string; size: num
 /* ---------- wishes ---------- */
 
 export async function setWishApproved(eventId: number, id: string, approved: boolean) {
-  return adminAction(async () => {
-    const ev = eventIdSchema.parse(eventId);
+  return userAction(async (user) => {
+    const ev = await ownEvent(user, eventId);
     const { error } = await db().from("wish").update({ approved }).eq("id", idSchema.parse(id)).eq("event_id", ev);
     if (error) throw new Error(error.message);
     revalidateTag(wishesTag(ev));
@@ -386,11 +430,85 @@ export async function setWishApproved(eventId: number, id: string, approved: boo
 }
 
 export async function deleteWish(eventId: number, id: string) {
-  return adminAction(async () => {
-    const ev = eventIdSchema.parse(eventId);
+  return userAction(async (user) => {
+    const ev = await ownEvent(user, eventId);
     const { error } = await db().from("wish").delete().eq("id", idSchema.parse(id)).eq("event_id", ev);
     if (error) throw new Error(error.message);
     revalidateTag(wishesTag(ev));
     revalidatePath("/", "layout");
+  });
+}
+
+/* ---------- customer accounts (site owner only) ---------- */
+
+const usernameSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z0-9._-]{3,40}$/, "Username: 3–40 letters, numbers, dots, dashes or underscores (no spaces)")
+  .refine((u) => u !== "admin", "“admin” is reserved for the site owner");
+
+const newAccountSchema = z.object({
+  username: usernameSchema,
+  name: z.string().trim().max(120, "Name is too long (max 120)").default(""),
+  eventId: eventIdSchema.nullable().default(null),
+});
+export type NewAccountInput = z.input<typeof newAccountSchema>;
+
+/** Creates a customer login and returns its generated password; it is shown once and never stored in plain text. */
+export async function createAccount(input: NewAccountInput) {
+  return adminAction(async () => {
+    const data = newAccountSchema.parse(input);
+    const password = generatePassword();
+    const { data: row, error } = await db()
+      .from("account")
+      .insert({ username: data.username, name: data.name, password_hash: await hashPassword(password) })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.code === "23505" ? "That username is already taken" : error.message);
+    if (data.eventId) {
+      const { error: assignErr } = await db().from("event").update({ account_id: row.id }).eq("id", data.eventId);
+      if (assignErr) throw new Error(assignErr.message);
+    }
+    revalidatePath("/admin", "layout");
+    return { username: data.username, password };
+  });
+}
+
+/** Sets a new generated password and signs the customer out everywhere. */
+export async function resetAccountPassword(id: string) {
+  return adminAction(async () => {
+    const accountId = idSchema.parse(id);
+    const { data: current, error: readErr } = await db().from("account").select("username, token_version").eq("id", accountId).single();
+    if (readErr) throw new Error(readErr.message);
+    const password = generatePassword();
+    const { error } = await db()
+      .from("account")
+      .update({ password_hash: await hashPassword(password), token_version: current.token_version + 1 })
+      .eq("id", accountId);
+    if (error) throw new Error(error.message);
+    return { username: current.username, password };
+  });
+}
+
+/** Deletes a login. Its events stay; they just have no customer any more. */
+export async function deleteAccount(id: string) {
+  return adminAction(async () => {
+    const { error } = await db().from("account").delete().eq("id", idSchema.parse(id));
+    if (error) throw new Error(error.message);
+    revalidatePath("/admin", "layout");
+  });
+}
+
+/** Gives an event to a customer account, or takes it back (accountId null). */
+export async function assignEvent(eventId: number, accountId: string | null) {
+  return adminAction(async () => {
+    const ev = eventIdSchema.parse(eventId);
+    const { error } = await db()
+      .from("event")
+      .update({ account_id: accountId ? idSchema.parse(accountId) : null })
+      .eq("id", ev);
+    if (error) throw new Error(error.message);
+    revalidatePath("/admin", "layout");
   });
 }

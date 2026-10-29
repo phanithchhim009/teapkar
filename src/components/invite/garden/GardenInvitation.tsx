@@ -8,14 +8,14 @@ import { EVENT_TYPE_INFO, eventHosts, shareTitle } from "@/lib/event-types";
 import type { EventData, ScheduleDay } from "@/lib/types";
 import type { InviteGuest } from "../Invitation";
 import { downloadIcs } from "../calendar";
-import { labelsFor, type Lang } from "../i18n";
-import { Lightbox } from "../Lightbox";
+import { labelsFor, withLunar, type Lang } from "../i18n";
+import { Lightbox, type Zoom } from "../Lightbox";
 import { weddingParents } from "../parents";
 import type { PublicWish } from "../Wishes";
 import { FallingLeaf, Garland, initials } from "./Art";
 import { Envelope } from "./Envelope";
 import { Hero } from "./Hero";
-import { Agenda, GardenCountdown, Gallery, Gift, Letter, Location, Messages, Thanks } from "./sections";
+import { Agenda, Films, GardenCountdown, Gallery, Gift, Letter, Location, Messages, Story, Thanks } from "./sections";
 import { GardenProvider } from "./ui";
 
 type Props = {
@@ -51,9 +51,11 @@ export function GardenInvitation({ event, agenda, guest, wishes, initialLang, pr
   const [opened, setOpened] = useState(false);
   const [pastHero, setPastHero] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [zoom, setZoom] = useState<string | null>(null);
+  const [zoom, setZoom] = useState<Zoom>(null);
+  const zoomOne = (src: string) => setZoom({ images: [src], index: 0 });
   const audio = useRef<HTMLAudioElement>(null);
   const tracked = useRef(false);
+  const pausedForVideo = useRef(false);
 
   const t = labelsFor(lang, event.type);
   const text = lang === "kh" ? event.text_kh : event.text_en;
@@ -109,11 +111,26 @@ export function GardenInvitation({ event, agenda, guest, wishes, initialLang, pr
   const toggleMusic = () => {
     const a = audio.current;
     if (!a) return;
+    pausedForVideo.current = false;
     if (a.paused) a.play().then(() => setPlaying(true)).catch(() => {});
     else {
       a.pause();
       setPlaying(false);
     }
+  };
+
+  // Hush the background music while a video plays, and bring it back afterwards if we were the ones who stopped it.
+  const videoStarted = () => {
+    const a = audio.current;
+    if (!a || a.paused) return;
+    a.pause();
+    setPlaying(false);
+    pausedForVideo.current = true;
+  };
+  const videoStopped = () => {
+    if (!pausedForVideo.current) return;
+    pausedForVideo.current = false;
+    audio.current?.play().then(() => setPlaying(true)).catch(() => {});
   };
 
   const vars = useMemo(
@@ -140,6 +157,8 @@ export function GardenInvitation({ event, agenda, guest, wishes, initialLang, pr
     ? () => downloadIcs({ title: shareTitle(event, lang), start: event.event_date!, location: text.location })
     : null;
   const g = c.gallery;
+  const story = c.story.filter((s) => s.photo || s.title_kh || s.title_en || s.text_kh || s.text_en);
+  const videos = c.videos.filter((v) => v.src);
 
   return (
     <MotionConfig reducedMotion="user">
@@ -169,7 +188,7 @@ export function GardenInvitation({ event, agenda, guest, wishes, initialLang, pr
               invitationTitle={text.invitation_title}
               message={text.invitation_message}
               hosts={hosts}
-              dateText={text.date_time}
+              dateText={withLunar(text)}
               location={text.location}
               closing={extra.closing}
             />
@@ -178,7 +197,9 @@ export function GardenInvitation({ event, agenda, guest, wishes, initialLang, pr
             {sections.map && (c.mapUrl || c.mapImage || gd.mapEmbed) && (
               <Location location={text.location} mapUrl={c.mapUrl} mapImage={c.mapImage} mapEmbed={gd.mapEmbed} color={gd.green} onCalendar={calendar} />
             )}
-            {sections.gallery && g.length > 0 && <Gallery photos={g} onOpen={setZoom} />}
+            {sections.story && story.length > 0 && <Story items={story} onZoom={setZoom} />}
+            {sections.video && videos.length > 0 && <Films videos={videos} onPlay={videoStarted} onStop={videoStopped} />}
+            {sections.gallery && g.length > 0 && <Gallery photos={g} onOpen={zoomOne} />}
             {(sections.rsvp || sections.wishes) && (
               <Messages
                 code={guest.code}
@@ -187,7 +208,7 @@ export function GardenInvitation({ event, agenda, guest, wishes, initialLang, pr
                 rsvp={sections.rsvp ? { status: guest.rsvp_status, count: guest.rsvp_count } : null}
               />
             )}
-            {sections.gift && (c.qrUsd || c.qrKhr) && <Gift config={c} onZoom={setZoom} />}
+            {sections.gift && (c.qrUsd || c.qrKhr) && <Gift config={c} onZoom={zoomOne} />}
             <Thanks title={text.gratitude_title} message={text.gratitude_message} hosts={hosts} letters={letters} monogram={gd.monogram} />
           </div>
 
@@ -271,7 +292,7 @@ export function GardenInvitation({ event, agenda, guest, wishes, initialLang, pr
             )}
           </AnimatePresence>
 
-          <Lightbox src={zoom} onClose={() => setZoom(null)} />
+          <Lightbox zoom={zoom} onChange={setZoom} />
         </div>
       </GardenProvider>
     </MotionConfig>

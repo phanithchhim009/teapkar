@@ -7,10 +7,11 @@ export function Reveal({ children, className, delay = 0 }: { children: React.Rea
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 28 }}
+      initial={{ opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.7, ease: "easeOut", delay }}
+      // Start just before the block scrolls in, so a normal swipe never lands on half-faded content.
+      viewport={{ once: true, margin: "0px 0px 80px 0px" }}
+      transition={{ duration: 0.45, ease: "easeOut", delay }}
     >
       {children}
     </motion.div>

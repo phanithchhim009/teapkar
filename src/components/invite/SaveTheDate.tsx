@@ -24,6 +24,8 @@ export function SaveTheDate({ date, lang, label }: { date: string; lang: Lang; l
   const num = lang === "kh" ? khNum : String;
   const weekday = lang === "kh" ? `ថ្ងៃ${n.days[d.getUTCDay()]}` : n.days[d.getUTCDay()];
   const month = lang === "kh" ? `ខែ${n.months[d.getUTCMonth()]}` : n.months[d.getUTCMonth()];
+  // Letter-spacing pulls Khmer stacked consonants and vowels apart, so only English gets small caps.
+  const caps = lang === "en" ? "uppercase tracking-wider" : "";
 
   return (
     <div className="space-y-2">
@@ -32,13 +34,13 @@ export function SaveTheDate({ date, lang, label }: { date: string; lang: Lang; l
         {label}
       </p>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <p className="border-y py-1.5 text-sm uppercase tracking-wider" style={{ borderColor: "var(--primary)" }}>
+        <p className={`border-y py-1.5 text-sm ${caps}`} style={{ borderColor: "var(--primary)" }}>
           {weekday}
         </p>
         <p className="font-heading px-1 text-5xl leading-none tabular-nums" style={{ color: "var(--primary)" }}>
           {num(d.getUTCDate())}
         </p>
-        <p className="border-y py-1.5 text-sm uppercase tracking-wider" style={{ borderColor: "var(--primary)" }}>
+        <p className={`border-y py-1.5 text-sm ${caps}`} style={{ borderColor: "var(--primary)" }}>
           {month} {num(d.getUTCFullYear())}
         </p>
       </div>

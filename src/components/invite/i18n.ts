@@ -1,5 +1,5 @@
 import { EVENT_TYPE_INFO } from "@/lib/event-types";
-import type { EventType } from "@/lib/types";
+import type { EventType, InvitationText } from "@/lib/types";
 
 export type Lang = "kh" | "en";
 
@@ -17,6 +17,9 @@ export const labels = {
     video: "វីដេអូ Pre-Wedding",
     play: "ចាក់វីដេអូ",
     saveTheDate: "សូមចំណាំថ្ងៃ",
+    copy: "ចម្លង",
+    copied: "បានចម្លង",
+    scrollDown: "អូសចុះក្រោម",
     location: "ទីតាំងកម្មវិធី",
     openMap: "បើកផែនទី Google Maps",
     rsvp: "បញ្ជាក់ការចូលរួម",
@@ -90,6 +93,9 @@ export const labels = {
     video: "Pre-Wedding Film",
     play: "Play video",
     saveTheDate: "Save the Date",
+    copy: "Copy",
+    copied: "Copied",
+    scrollDown: "Scroll down",
     location: "Location",
     openMap: "Open in Google Maps",
     rsvp: "RSVP",
@@ -153,6 +159,11 @@ export const labels = {
 } satisfies Record<Lang, Record<string, string>>;
 
 export type Labels = (typeof labels)["kh"];
+
+/** The display date with the Khmer lunar date on the line below, when one is filled in. */
+export function withLunar(text: Pick<InvitationText, "date_time" | "lunar_date">) {
+  return [text.date_time, text.lunar_date].filter(Boolean).join("\n");
+}
 
 /** Guest-page labels for an event type; the defaults above are worded for weddings. */
 export function labelsFor(lang: Lang, type: EventType): Labels {

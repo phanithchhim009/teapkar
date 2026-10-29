@@ -12,6 +12,19 @@ type Day = { key: string; title: string; date: string; items: Item[] };
 
 const key = () => Math.random().toString(36).slice(2);
 
+/** Common Khmer wedding ceremony steps, roughly in the order they happen; one tap adds one to the day. */
+const CEREMONY_STEPS = [
+  "ហែជំនូន",
+  "សូត្រមន្ត",
+  "សែនក្រុងពាលី",
+  "កាត់សក់",
+  "បង្វិលពពិល",
+  "សំពះផ្ទឹម",
+  "ចងដៃ",
+  "បាចផ្កាស្លា",
+  "ពិសាភោជនាហារ",
+];
+
 function swap<T>(arr: T[], i: number, j: number) {
   if (j < 0 || j >= arr.length) return arr;
   const next = [...arr];
@@ -64,6 +77,19 @@ export function AgendaEditor({ eventId, initial, onSaved }: { eventId: number; i
                   <Trash2 size={14} />
                 </Button>
               </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-neutral-500">Quick add:</span>
+            {CEREMONY_STEPS.map((name) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => patchDay(di, { items: [...day.items, { key: key(), time: "", name }] })}
+                className="rounded-full border border-neutral-200 bg-neutral-50 px-2.5 py-0.5 text-xs text-neutral-700 hover:border-rose-300 hover:bg-rose-50"
+              >
+                + {name}
+              </button>
             ))}
           </div>
           <div className="flex justify-between">

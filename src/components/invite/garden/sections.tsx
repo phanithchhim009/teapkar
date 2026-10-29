@@ -22,14 +22,17 @@ import {
 import Image from "next/image";
 import QRCode from "qrcode";
 import { useEffect, useRef, useState } from "react";
-import type { EventConfig, ScheduleDay } from "@/lib/types";
+import type { EventConfig, ScheduleDay, StoryItem, Video } from "@/lib/types";
 import { diff } from "../Countdown";
 import { dateParts, khDigits, shortStamp } from "../bloom/date";
 import type { InviteGuest } from "../Invitation";
+import type { Zoom } from "../Lightbox";
 import { unoptimized } from "../media";
 import type { ParentSides } from "../parents";
 import { RollingDigits } from "../RollingDigits";
 import { Rsvp } from "../Rsvp";
+import { Story as StoryTimeline } from "../Story";
+import { Videos } from "../Videos";
 import { useWishes, type PublicWish } from "../Wishes";
 import { Monogram, Sprig } from "./Art";
 import { EASE, Heading, Reveal, Section, useGarden } from "./ui";
@@ -328,6 +331,28 @@ export function Location({
           )}
         </Reveal>
       )}
+    </Section>
+  );
+}
+
+/* ---------------------------------------------------------------- Love story + pre-wedding films */
+
+export function Story({ items, onZoom }: { items: StoryItem[]; onZoom: (z: Zoom) => void }) {
+  const { t, lang } = useGarden();
+  return (
+    <Section id="story">
+      <Heading>{t.story}</Heading>
+      <StoryTimeline items={items} lang={lang} onZoom={onZoom} />
+    </Section>
+  );
+}
+
+export function Films({ videos, onPlay, onStop }: { videos: Video[]; onPlay: () => void; onStop: () => void }) {
+  const { t } = useGarden();
+  return (
+    <Section id="video" className="gd-films px-4">
+      <Heading>{t.video}</Heading>
+      <Videos videos={videos} t={t} onPlay={onPlay} onStop={onStop} />
     </Section>
   );
 }

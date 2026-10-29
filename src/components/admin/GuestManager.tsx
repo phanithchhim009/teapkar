@@ -87,6 +87,62 @@ export function GuestManager({ eventId, guests, siteUrl }: { eventId: number; gu
   };
 
   const allChecked = visible.length > 0 && visible.every((g) => selected.has(g.id));
+  const toggleAll = () => setSelected(allChecked ? new Set() : new Set(visible.map((g) => g.id)));
+  const toggle = (id: string) => {
+    const s = new Set(selected);
+    if (s.has(id)) s.delete(id);
+    else s.add(id);
+    setSelected(s);
+  };
+  const emptyText = guests.length === 0 ? "No guests yet — add one or bulk add a list." : "No guests match the filters.";
+
+  const status = (g: Guest) => (
+    <>
+      {g.opened_at ? (
+        <span title={new Date(g.opened_at).toLocaleString()}>
+          <Badge tone="blue">Opened ×{g.open_count}</Badge>
+        </span>
+      ) : (
+        <Badge>Not opened</Badge>
+      )}
+      {g.rsvp_status === "yes" && <Badge tone="green">Yes · {g.rsvp_count}</Badge>}
+      {g.rsvp_status === "no" && <Badge tone="red">No</Badge>}
+      {g.rsvp_status === "pending" && <Badge tone="amber">Pending</Badge>}
+    </>
+  );
+
+  // Copy / Telegram / QR / open. On phones they get labels and full-height touch targets.
+  const linkActions = (g: Guest, labelled: boolean) => {
+    const cls = labelled
+      ? "flex h-11 flex-col items-center justify-center gap-0.5 rounded-lg text-[11px] text-neutral-600 hover:bg-neutral-100"
+      : "inline-flex h-8 items-center rounded-lg px-2.5 text-neutral-700 hover:bg-neutral-100";
+    return (
+      <>
+        <button className={cls} onClick={() => copy(g)} title="Copy link">
+          {copied === g.id ? <Check size={labelled ? 16 : 14} className="text-emerald-600" /> : <Copy size={labelled ? 16 : 14} />}
+          {labelled && (copied === g.id ? "Copied" : "Copy link")}
+        </button>
+        <a
+          className={cls}
+          href={`https://t.me/share/url?url=${encodeURIComponent(linkFor(g))}&text=${encodeURIComponent(`សូមគោរពអញ្ជើញ ${g.name}`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Share via Telegram"
+        >
+          <Send size={labelled ? 16 : 14} />
+          {labelled && "Telegram"}
+        </a>
+        <button className={cls} onClick={() => setQrFor(g)} title="QR code">
+          <QrCode size={labelled ? 16 : 14} />
+          {labelled && "QR"}
+        </button>
+        <a className={cls} href={`/i/${g.code}`} target="_blank" title="Open invitation (counts as an open)">
+          <ExternalLink size={labelled ? 16 : 14} />
+          {labelled && "Open"}
+        </a>
+      </>
+    );
+  };
 
   return (
     <div className="space-y-4">
@@ -142,18 +198,51 @@ export function GuestManager({ eventId, guests, siteUrl }: { eventId: number; gu
         </div>
       )}
 
-      <Card className="overflow-hidden p-0">
+      {/* Phones: one card per guest, with labelled link buttons. */}
+      <div className="space-y-2 sm:hidden">
+        {visible.length > 0 && (
+          <label className="flex items-center gap-2 px-1 text-sm text-neutral-600">
+            <input type="checkbox" className="h-4 w-4" checked={allChecked} onChange={toggleAll} /> Select all ({visible.length})
+          </label>
+        )}
+        {visible.length === 0 && <Card className="py-10 text-center text-sm text-neutral-500">{emptyText}</Card>}
+        {visible.map((g) => (
+          <Card key={g.id} className="p-3">
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 shrink-0"
+                checked={selected.has(g.id)}
+                onChange={() => toggle(g.id)}
+                aria-label={`Select ${g.name}`}
+              />
+              <div className="min-w-0 flex-1">
+                <button className="block w-full truncate text-left font-medium hover:text-rose-600" onClick={() => setEditing(g)}>
+                  {g.name}
+                </button>
+                <div className="truncate text-xs text-neutral-400">
+                  {g.code}
+                  {g.phone && ` · ${g.phone}`}
+                  {g.lang === "en" && " · EN"}
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {g.group_tag && <Badge>{g.group_tag}</Badge>}
+                  {status(g)}
+                </div>
+              </div>
+            </div>
+            <div className="mt-2 grid grid-cols-4 border-t border-neutral-100 pt-1">{linkActions(g, true)}</div>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="hidden overflow-hidden p-0 sm:block">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-neutral-50 text-left text-xs uppercase tracking-wide text-neutral-500">
               <tr>
                 <th className="w-10 px-3 py-2">
-                  <input
-                    type="checkbox"
-                    checked={allChecked}
-                    onChange={() => setSelected(allChecked ? new Set() : new Set(visible.map((g) => g.id)))}
-                    aria-label="Select all"
-                  />
+                  <input type="checkbox" checked={allChecked} onChange={toggleAll} aria-label="Select all" />
                 </th>
                 <th className="px-3 py-2">Name</th>
                 <th className="px-3 py-2">Group</th>
@@ -166,24 +255,14 @@ export function GuestManager({ eventId, guests, siteUrl }: { eventId: number; gu
               {visible.length === 0 && (
                 <tr>
                   <td colSpan={6} className="px-3 py-10 text-center text-neutral-500">
-                    {guests.length === 0 ? "No guests yet — add one or bulk add a list." : "No guests match the filters."}
+                    {emptyText}
                   </td>
                 </tr>
               )}
               {visible.map((g) => (
                 <tr key={g.id} className="hover:bg-neutral-50">
                   <td className="px-3 py-2">
-                    <input
-                      type="checkbox"
-                      checked={selected.has(g.id)}
-                      onChange={() => {
-                        const s = new Set(selected);
-                        if (s.has(g.id)) s.delete(g.id);
-                        else s.add(g.id);
-                        setSelected(s);
-                      }}
-                      aria-label={`Select ${g.name}`}
-                    />
+                    <input type="checkbox" checked={selected.has(g.id)} onChange={() => toggle(g.id)} aria-label={`Select ${g.name}`} />
                   </td>
                   <td className="px-3 py-2">
                     <button className="text-left font-medium hover:text-rose-600" onClick={() => setEditing(g)}>
@@ -211,31 +290,7 @@ export function GuestManager({ eventId, guests, siteUrl }: { eventId: number; gu
                     {g.rsvp_status === "pending" && <Badge tone="amber">Pending</Badge>}
                   </td>
                   <td className="px-3 py-2">
-                    <div className="flex justify-end gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => copy(g)} title="Copy link">
-                        {copied === g.id ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
-                      </Button>
-                      <a
-                        className="inline-flex h-8 items-center rounded-lg px-2.5 text-neutral-700 hover:bg-neutral-100"
-                        href={`https://t.me/share/url?url=${encodeURIComponent(linkFor(g))}&text=${encodeURIComponent(`សូមគោរពអញ្ជើញ ${g.name}`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Share via Telegram"
-                      >
-                        <Send size={14} />
-                      </a>
-                      <Button size="sm" variant="ghost" onClick={() => setQrFor(g)} title="QR code">
-                        <QrCode size={14} />
-                      </Button>
-                      <a
-                        className="inline-flex h-8 items-center rounded-lg px-2.5 text-neutral-700 hover:bg-neutral-100"
-                        href={`/i/${g.code}`}
-                        target="_blank"
-                        title="Open invitation (counts as an open)"
-                      >
-                        <ExternalLink size={14} />
-                      </a>
-                    </div>
+                    <div className="flex justify-end gap-1">{linkActions(g, false)}</div>
                   </td>
                 </tr>
               ))}
