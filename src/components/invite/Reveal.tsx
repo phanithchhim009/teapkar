@@ -20,11 +20,24 @@ export function SectionTitle({ children }: { children: React.ReactNode }) {
   // Script fonts are unreadable in ALL CAPS, so fall back to the heading font.
   const caps = typeof children === "string" && /[A-Z]/.test(children) && children === children.toUpperCase();
   return (
-    <div className="mb-5 text-center">
+    <div className="mb-6 text-center">
+      <Flourish />
       <h2 className={`${caps ? "font-heading tracking-widest" : "font-title"} text-xl leading-relaxed`} style={{ color: "var(--primary)" }}>
         {children}
       </h2>
       <div className="divider mx-auto mt-3 w-40" />
     </div>
+  );
+}
+
+export function Flourish({ className = "mx-auto mb-2 h-4 w-28" }: { className?: string }) {
+  return (
+    <svg aria-hidden viewBox="0 0 120 16" className={className} fill="none" stroke="var(--primary)" strokeWidth="1" strokeLinecap="round">
+      <path d="M6 8 Q 30 1 52 8" />
+      <path d="M68 8 Q 90 1 114 8" />
+      <path d="M18 9.5 Q 34 13 48 10" opacity="0.5" />
+      <path d="M72 10 Q 86 13 102 9.5" opacity="0.5" />
+      <path d="M60 3 L65 8 L60 13 L55 8 Z" fill="var(--primary)" />
+    </svg>
   );
 }

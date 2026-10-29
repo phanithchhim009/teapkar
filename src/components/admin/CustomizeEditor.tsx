@@ -16,9 +16,11 @@ import {
 } from "@/lib/types";
 import { AgendaEditor } from "./AgendaEditor";
 import { GalleryEditor, MediaUpload } from "./MediaUpload";
+import { StoryEditor } from "./StoryEditor";
 import { Button, Card, Field, Input, Select, Textarea, cx } from "./ui";
+import { VideoEditor } from "./VideoEditor";
 
-const TABS = ["Couple & Date", "Text", "Agenda", "Theme", "Media", "Gift", "Sections"] as const;
+const TABS = ["Couple & Date", "Text", "Agenda", "Story", "Video", "Theme", "Media", "Gift", "Sections"] as const;
 type Tab = (typeof TABS)[number];
 
 const TEXT_LABELS: Record<keyof InvitationText, string> = {
@@ -37,6 +39,8 @@ const LONG_TEXT = new Set<keyof InvitationText>(["invitation_message", "gratitud
 const SECTION_LABELS: Record<(typeof SECTION_KEYS)[number], string> = {
   countdown: "Countdown timer",
   agenda: "Agenda",
+  story: "Our love story",
+  video: "Pre-wedding video",
   gallery: "Photo gallery",
   map: "Location / map",
   rsvp: "RSVP",
@@ -164,6 +168,10 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
         )}
 
         {tab === "Agenda" && <AgendaEditor initial={agenda} onSaved={() => setPreviewKey((k) => k + 1)} />}
+
+        {tab === "Story" && <StoryEditor value={data.config.story} onChange={(v) => cfg("story", v)} />}
+
+        {tab === "Video" && <VideoEditor value={data.config.videos} onChange={(v) => cfg("videos", v)} />}
 
         {tab === "Theme" && (
           <Card className="space-y-5">

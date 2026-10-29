@@ -24,7 +24,9 @@ values (
     "bankName": "ABA",
     "accountName": "",
     "accountNumber": "",
-    "gallery": []
+    "gallery": [],
+    "story": [],
+    "videos": []
   }'::jsonb,
   '{
     "main_title": "សិរីមង្គលអាពាហ៍ពិពាហ៍",
@@ -48,7 +50,7 @@ values (
     "gratitude_title": "OUR GRATITUDE AND APOLOGY",
     "gratitude_message": "We are extremely thankful for H.E., L.C.T., Okhna, ladies and gentlemen for your presence in our upcoming wedding.\nWe would like to apologize if this invitation has not been personally delivered by us."
   }'::jsonb,
-  '{"countdown": true, "agenda": true, "gallery": true, "map": true, "rsvp": true, "wishes": true, "gift": true}'::jsonb
+  '{"countdown": true, "agenda": true, "story": true, "video": true, "gallery": true, "map": true, "rsvp": true, "wishes": true, "gift": true}'::jsonb
 )
 on conflict (id) do nothing;
 

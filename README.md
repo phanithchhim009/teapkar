@@ -38,7 +38,7 @@ npm run dev
 ## Deploy (Supabase Cloud + Vercel)
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. In **SQL Editor**, run `supabase/migrations/0001_init.sql` and `0002_hardening.sql` (in that order), then `supabase/seed.sql` for the default content. Delete the `demo2026` guest afterwards. You can also run `supabase link && supabase db push`.
+2. In **SQL Editor**, run `supabase/migrations/0001_init.sql`, `0002_hardening.sql` and `0003_story_video.sql` (in that order), then `supabase/seed.sql` for the default content. Delete the `demo2026` guest afterwards. You can also run `supabase link && supabase db push`.
 3. Push this repo to GitHub and import it into [Vercel](https://vercel.com).
 4. Set these environment variables in Vercel:
 

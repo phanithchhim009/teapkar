@@ -1,9 +1,12 @@
 "use client";
 
-import { ImagePlus, Loader2, Music, X } from "lucide-react";
+import { Film, ImagePlus, Loader2, Music, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { createUpload } from "@/app/actions/admin";
 import { unwrap } from "@/lib/action-result";
+import { parseYouTube, youTubeThumb } from "@/lib/video";
+
+const ACCEPT = { image: "image/*", audio: "audio/*", video: "video/mp4,video/webm,video/quicktime" };
 
 /** Uploads straight to Supabase Storage via a signed URL; returns the file's public URL. */
 export async function uploadFile(file: File) {
@@ -25,15 +28,18 @@ export function MediaUpload({
   value,
   onChange,
   kind = "image",
+  hint,
 }: {
   label: string;
   value: string;
   onChange: (url: string) => void;
-  kind?: "image" | "audio";
+  kind?: "image" | "audio" | "video";
+  hint?: string;
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const yt = kind === "video" && value ? parseYouTube(value) : null;
 
   return (
     <div className="space-y-1.5">
@@ -48,17 +54,22 @@ export function MediaUpload({
             <Loader2 className="animate-spin" size={20} />
           ) : value && kind === "image" ? (
             <img src={value} alt="" className="h-full w-full object-cover" />
+          ) : yt ? (
+            <img src={youTubeThumb(yt.id)} alt="" className="h-full w-full object-cover" />
           ) : kind === "audio" ? (
             <Music size={20} className={value ? "text-rose-500" : ""} />
+          ) : kind === "video" ? (
+            <Film size={20} className={value ? "text-rose-500" : ""} />
           ) : (
             <ImagePlus size={20} />
           )}
         </button>
         <div className="min-w-0 flex-1 space-y-1">
           {kind === "audio" && value && <audio src={value} controls className="h-8 w-full" />}
+          {kind === "video" && value && !yt && <video src={value} controls preload="metadata" className="max-h-40 w-full rounded-md bg-black" />}
           <input
             className="h-8 w-full rounded-md border border-neutral-200 px-2 text-xs text-neutral-600"
-            placeholder="…or paste a URL"
+            placeholder={kind === "video" ? "…or paste a YouTube / video URL" : "…or paste a URL"}
             value={value}
             onChange={(e) => onChange(e.target.value)}
           />
@@ -68,13 +79,14 @@ export function MediaUpload({
             </button>
           )}
           {error && <p className="text-xs text-red-600">{error}</p>}
+          {hint && <p className="text-xs text-neutral-500">{hint}</p>}
         </div>
       </div>
       <input
         ref={input}
         type="file"
         hidden
-        accept={kind === "image" ? "image/*" : "audio/*"}
+        accept={ACCEPT[kind]}
         onChange={async (e) => {
           const f = e.target.files?.[0];
           e.target.value = "";

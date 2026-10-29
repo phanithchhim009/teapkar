@@ -224,10 +224,11 @@ export async function saveAgenda(input: AgendaInput) {
   });
 }
 
-// Keep in sync with allowed_mime_types on the media bucket (supabase/migrations/0002_hardening.sql).
+// Keep in sync with allowed_mime_types and file_size_limit on the media bucket (supabase/migrations/0003_story_video.sql).
 // SVG is deliberately excluded: it can carry script and the bucket is public.
-const ALLOWED_TYPES = /^(image\/(png|jpe?g|webp|gif|avif)|audio\/(mpeg|mp3|mp4|aac|ogg|wav|x-m4a))$/;
+const ALLOWED_TYPES = /^(image\/(png|jpe?g|webp|gif|avif)|audio\/(mpeg|mp3|mp4|aac|ogg|wav|x-m4a)|video\/(mp4|webm|quicktime))$/;
 const MAX_UPLOAD = 15 * 1024 * 1024;
+const MAX_VIDEO_UPLOAD = 50 * 1024 * 1024;
 
 /**
  * Returns a one-time URL the browser uploads the file to directly. Uploading through a server action
@@ -236,7 +237,8 @@ const MAX_UPLOAD = 15 * 1024 * 1024;
 export async function createUpload(file: { name: string; type: string; size: number }) {
   return adminAction(async () => {
     if (!ALLOWED_TYPES.test(file.type)) throw new Error(`Unsupported file type: ${file.type || "unknown"}`);
-    if (file.size > MAX_UPLOAD) throw new Error("File too large (max 15MB)");
+    const isVideo = file.type.startsWith("video/");
+    if (file.size > (isVideo ? MAX_VIDEO_UPLOAD : MAX_UPLOAD)) throw new Error(`File too large (max ${isVideo ? 50 : 15}MB)`);
     const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
     const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const bucket = db().storage.from(MEDIA_BUCKET);

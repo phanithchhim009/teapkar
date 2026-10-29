@@ -1,5 +1,25 @@
 import { z } from "zod";
 
+/** One chapter of the couple's story ("2015 · High school"), shown as a timeline. */
+export const storyItemSchema = z.object({
+  id: z.string().max(40).default(""),
+  date: z.string().max(80).default(""),
+  photo: z.string().default(""),
+  title_kh: z.string().max(200).default(""),
+  title_en: z.string().max(200).default(""),
+  text_kh: z.string().max(2000).default(""),
+  text_en: z.string().max(2000).default(""),
+});
+export type StoryItem = z.infer<typeof storyItemSchema>;
+
+/** An uploaded video file or a YouTube link, with an optional poster image. */
+export const videoSchema = z.object({
+  id: z.string().max(40).default(""),
+  src: z.string().default(""),
+  poster: z.string().default(""),
+});
+export type Video = z.infer<typeof videoSchema>;
+
 export const eventConfigSchema = z.object({
   primaryColor: z.string().default("#f9af59"),
   textColor: z.string().default("#B08E4F"),
@@ -21,6 +41,8 @@ export const eventConfigSchema = z.object({
   accountName: z.string().default(""),
   accountNumber: z.string().default(""),
   gallery: z.array(z.string()).default([]),
+  story: z.array(storyItemSchema).max(30).default([]),
+  videos: z.array(videoSchema).max(10).default([]),
 });
 export type EventConfig = z.infer<typeof eventConfigSchema>;
 
@@ -41,6 +63,8 @@ export const TEXT_FIELDS = Object.keys(invitationTextSchema.shape) as (keyof Inv
 export const sectionsSchema = z.object({
   countdown: z.boolean().default(true),
   agenda: z.boolean().default(true),
+  story: z.boolean().default(true),
+  video: z.boolean().default(true),
   gallery: z.boolean().default(true),
   map: z.boolean().default(true),
   rsvp: z.boolean().default(true),
