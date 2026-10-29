@@ -6,9 +6,15 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { trackOpen } from "@/app/actions/guest";
 import type { EventData, ScheduleDay } from "@/lib/types";
+import { AngkorSkyline, Lotus, LotusBud, NagaArch } from "./angkor/Ornaments";
+import { BloomInvitation } from "./bloom/BloomInvitation";
 import { Countdown } from "./Countdown";
-import { labels, type Lang } from "./i18n";
+import { GardenInvitation } from "./garden/GardenInvitation";
+import { Hosts } from "./Hosts";
+import { labelsFor, type Lang } from "./i18n";
 import { Lightbox, type Zoom } from "./Lightbox";
+import { ParentsGrid, weddingParents } from "./parents";
+import { LotusInvitation } from "./lotus/LotusInvitation";
 import { unoptimized } from "./media";
 import { Flourish, Reveal, SectionTitle } from "./Reveal";
 import { Rsvp } from "./Rsvp";
@@ -40,7 +46,19 @@ function bg(url: string, fallback: string) {
   return url ? { backgroundImage: `url("${safe}")` } : { background: fallback };
 }
 
-export function Invitation({ event, agenda, guest, wishes, initialLang, preview = false }: Props) {
+export function Invitation(props: Props) {
+  // Bloom, Lotus and Garden have their own component trees; classic and angkor share the one below.
+  if (props.event.config.theme === "bloom") return <BloomInvitation {...props} />;
+  if (props.event.config.theme === "lotus") return <LotusInvitation {...props} />;
+  if (props.event.config.theme === "garden") return <GardenInvitation {...props} />;
+  return (
+    <MotionConfig reducedMotion="user">
+      <ClassicInvitation {...props} />
+    </MotionConfig>
+  );
+}
+
+function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview = false }: Props) {
   const { config: c, sections } = event;
   const [lang, setLang] = useState<Lang>(initialLang);
   const [opened, setOpened] = useState(false);
@@ -51,7 +69,7 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
   const pausedForVideo = useRef(false);
   const { scrollYProgress } = useScroll();
 
-  const t = labels[lang];
+  const t = labelsFor(lang, event.type);
   const text = lang === "kh" ? event.text_kh : event.text_en;
 
   useEffect(() => {
@@ -111,322 +129,416 @@ export function Invitation({ event, agenda, guest, wishes, initialLang, preview 
   const story = c.story.filter((s) => s.photo || s.title_kh || s.title_en || s.text_kh || s.text_en);
   const videos = c.videos.filter((v) => v.src);
 
-  const gradient = `linear-gradient(160deg, #fffaf2, color-mix(in srgb, ${c.primaryColor} 25%, #fff))`;
+  const angkor = c.theme === "angkor";
+  const parents = weddingParents(event, text);
+  const gradient = angkor
+    ? `linear-gradient(180deg, #f8f1e3, #efe1c3)`
+    : `linear-gradient(160deg, #fffaf2, color-mix(in srgb, ${c.primaryColor} 25%, #fff))`;
+  // Dawn over the moat at Angkor Wat.
+  const sunrise = "linear-gradient(180deg, #f3d6a6 0%, #f9ead0 40%, #f4e5c8 72%, #e8d3ab 100%)";
+  // Section helpers: sandstone texture + lotus-petal frieze on top in the Angkor theme.
+  const sec = (cls: string) => (angkor ? `${cls} temple-section` : cls);
+  const band = angkor ? <div aria-hidden className="frieze absolute inset-x-0 top-0" /> : null;
 
   return (
-    <MotionConfig reducedMotion="user">
-      <div className="invite min-h-dvh bg-neutral-900" style={themeVars}>
-        {c.music && <audio ref={audio} src={c.music} loop preload="none" />}
-  
-        <div className="relative mx-auto min-h-dvh max-w-[480px] overflow-hidden bg-white shadow-2xl">
-          {/* ---------- Cover ---------- */}
-          <AnimatePresence>
-            {!opened && (
-              <motion.section
-                key="cover"
-                className="fixed inset-0 z-40 mx-auto flex max-w-[480px] flex-col items-center justify-between overflow-hidden px-8 py-16 text-center"
-                exit={{ opacity: 0, scale: 1.08, filter: "blur(6px)" }}
-                transition={{ duration: 0.9, ease: "easeInOut" }}
-              >
-                {/* Slow zoom on the background photo */}
-                <motion.div
-                  aria-hidden
-                  className="absolute inset-0 bg-cover bg-center"
-                  style={bg(c.coverBackground, gradient)}
-                  initial={{ scale: 1 }}
-                  animate={{ scale: 1.12 }}
-                  transition={{ duration: 20, ease: "linear" }}
-                />
-                {/* Double frame */}
-                <div aria-hidden className="pointer-events-none absolute inset-3 border" style={{ borderColor: "var(--primary)", borderRadius: "var(--radius)" }} />
-                <div aria-hidden className="pointer-events-none absolute inset-[18px] border opacity-50" style={{ borderColor: "var(--primary)", borderRadius: "var(--radius)" }} />
-  
+    <div className={`invite min-h-dvh bg-neutral-900 ${angkor ? "theme-angkor" : ""}`} style={themeVars}>
+      {c.music && <audio ref={audio} src={c.music} loop preload="none" />}
+
+      <div className="relative mx-auto min-h-dvh max-w-[480px] overflow-hidden bg-white shadow-2xl">
+        {/* ---------- Cover ---------- */}
+        <AnimatePresence>
+          {!opened && (
+            <motion.section
+              key="cover"
+              className={`fixed inset-0 z-40 mx-auto flex max-w-[480px] flex-col items-center justify-between overflow-hidden text-center ${angkor ? "px-6 py-10" : "px-8 py-16"}`}
+              exit={{ opacity: 0, scale: 1.08, filter: "blur(6px)" }}
+              transition={{ duration: 0.9, ease: "easeInOut" }}
+            >
+              {/* Slow zoom on the background photo */}
+              <motion.div
+                aria-hidden
+                className="absolute inset-0 bg-cover bg-center"
+                style={bg(c.coverBackground, angkor ? sunrise : gradient)}
+                initial={{ scale: 1 }}
+                animate={{ scale: 1.12 }}
+                transition={{ duration: 20, ease: "linear" }}
+              />
+              {!angkor && (
+                <>
+                  {/* Double frame */}
+                  <div aria-hidden className="pointer-events-none absolute inset-3 border" style={{ borderColor: "var(--primary)", borderRadius: "var(--radius)" }} />
+                  <div aria-hidden className="pointer-events-none absolute inset-[18px] border opacity-50" style={{ borderColor: "var(--primary)", borderRadius: "var(--radius)" }} />
+                </>
+              )}
+
+              {angkor ? (
+                <div className="relative w-full">
+                  <div className="relative mx-auto w-full max-w-[300px]" style={{ color: "var(--primary)" }}>
+                    <NagaArch className="w-full" />
+                    <p className="font-title absolute inset-x-[19%] bottom-[20%] text-base leading-relaxed">{text.main_title}</p>
+                  </div>
+                  <p className="font-title mt-3 text-2xl leading-loose">
+                    <Hosts
+                      event={event}
+                      amp={
+                        <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
+                          &amp;
+                        </span>
+                      }
+                    />
+                  </p>
+                </div>
+              ) : (
                 <div className="relative space-y-3">
                   <p className="font-title text-lg" style={{ color: "var(--primary)" }}>
                     {text.main_title}
                   </p>
                   <Flourish />
                   <p className="font-title text-2xl leading-loose">
-                    {event.groom}
-                    <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
-                      &amp;
-                    </span>
-                    {event.bride}
+                    <Hosts
+                      event={event}
+                      amp={
+                        <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
+                          &amp;
+                        </span>
+                      }
+                    />
                   </p>
                 </div>
-  
-                <div className="relative w-full space-y-4">
-                  <p className="text-sm">{text.subtitle || t.dear}</p>
-                  <div className="card mx-auto w-full max-w-xs px-4 py-3">
-                    <p className="font-title text-lg" style={{ color: "var(--guest)" }}>
-                      {guest.name}
-                    </p>
-                  </div>
-                  <motion.button
-                    onClick={open}
-                    className="btn-primary mx-auto px-8 py-3 shadow-lg"
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                  >
-                    {t.open}
-                  </motion.button>
-                </div>
-              </motion.section>
-            )}
-          </AnimatePresence>
-  
-          {/* ---------- Scroll progress ---------- */}
-          {opened && (
-            <motion.div
-              aria-hidden
-              className="fixed inset-x-0 top-0 z-30 mx-auto h-0.5 max-w-[480px] origin-left"
-              style={{ scaleX: scrollYProgress, background: "var(--primary)" }}
-            />
-          )}
-  
-          {/* ---------- Floating controls ---------- */}
-          {opened && (
-            <div className="fixed bottom-5 z-30 flex w-full max-w-[480px] justify-end gap-2 px-4 pointer-events-none">
-              <button
-                onClick={() => setLang(lang === "kh" ? "en" : "kh")}
-                className="btn-primary pointer-events-auto h-11 w-11 rounded-full! text-xs font-bold shadow-lg"
-                aria-label="Switch language"
-              >
-                {lang === "kh" ? "EN" : "ខ្មែរ"}
-              </button>
-              {c.music && (
-                <button
-                  onClick={toggleMusic}
-                  className="btn-primary pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full! shadow-lg"
-                  aria-label="Toggle music"
-                >
-                  {playing ? <Music size={18} className="animate-spin [animation-duration:3s]" /> : <VolumeX size={18} />}
-                </button>
               )}
-            </div>
+
+              {angkor && !c.coverBackground && (
+                <div className="relative w-full shrink" style={{ color: "var(--primary)" }}>
+                  <div
+                    aria-hidden
+                    className="sun absolute top-[2%] h-28 w-28 rounded-full"
+                    style={{ left: "calc(50% - 3.5rem)", background: "radial-gradient(circle, #ffe7b3 0%, #f8c77e 40%, transparent 70%)" }}
+                  />
+                  <AngkorSkyline className="relative mx-auto max-h-[30dvh] w-full" />
+                </div>
+              )}
+
+              <div className="relative w-full space-y-4">
+                <p className="text-sm">{text.subtitle || t.dear}</p>
+                <div className="card mx-auto w-full max-w-xs px-4 py-3">
+                  <p className="font-title text-lg" style={{ color: "var(--guest)" }}>
+                    {guest.name}
+                  </p>
+                </div>
+                <motion.button
+                  onClick={open}
+                  className="btn-primary mx-auto px-8 py-3 shadow-lg"
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                >
+                  {t.open}
+                </motion.button>
+              </div>
+            </motion.section>
           )}
-  
-          <Petals color={c.primaryColor} />
-  
-          {/* ---------- Main ---------- */}
-          <section className="relative bg-cover bg-center px-6 py-16 text-center" style={bg(c.mainBackground, gradient)}>
-            <Reveal className="space-y-5">
+        </AnimatePresence>
+
+        {/* ---------- Scroll progress ---------- */}
+        {opened && (
+          <motion.div
+            aria-hidden
+            className="fixed inset-x-0 top-0 z-30 mx-auto h-0.5 max-w-[480px] origin-left"
+            style={{ scaleX: scrollYProgress, background: "var(--primary)" }}
+          />
+        )}
+
+        {/* ---------- Floating controls ---------- */}
+        {opened && (
+          <div className="fixed bottom-5 z-30 flex w-full max-w-[480px] justify-end gap-2 px-4 pointer-events-none">
+            <button
+              onClick={() => setLang(lang === "kh" ? "en" : "kh")}
+              className="btn-primary pointer-events-auto h-11 w-11 rounded-full! text-xs font-bold shadow-lg"
+              aria-label="Switch language"
+            >
+              {lang === "kh" ? "EN" : "ខ្មែរ"}
+            </button>
+            {c.music && (
+              <button
+                onClick={toggleMusic}
+                className="btn-primary pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full! shadow-lg"
+                aria-label="Toggle music"
+              >
+                {playing ? <Music size={18} className="animate-spin [animation-duration:3s]" /> : <VolumeX size={18} />}
+              </button>
+            )}
+          </div>
+        )}
+
+        <Petals color={c.primaryColor} />
+
+        {/* ---------- Main ---------- */}
+        <section className={sec("relative bg-cover bg-center px-6 py-16 text-center")} style={bg(c.mainBackground, gradient)}>
+          <Reveal className="space-y-5">
+            {angkor ? (
+              <div className="relative mx-auto w-full max-w-[300px]" style={{ color: "var(--primary)" }}>
+                <NagaArch className="w-full" />
+                <p className="font-title absolute inset-x-[19%] bottom-[20%] text-lg leading-relaxed">{text.main_title}</p>
+              </div>
+            ) : (
               <p className="font-title text-2xl leading-loose" style={{ color: "var(--primary)" }}>
                 {text.main_title}
               </p>
-              <p className="font-title text-xl leading-loose">
-                {event.groom}
-                <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
-                  &amp;
-                </span>
-                {event.bride}
-              </p>
-              <div className="divider mx-auto w-48" />
-              <p className="text-sm">{text.subtitle}</p>
-              <p className="font-title text-lg" style={{ color: "var(--guest)" }}>
-                {guest.name}
-              </p>
-            </Reveal>
-  
-            {event.event_date && (
-              <Reveal className="mt-8" delay={0.05}>
-                <SaveTheDate date={event.event_date} lang={lang} label={t.saveTheDate} />
-              </Reveal>
             )}
-  
-            <Reveal className="card mt-8 space-y-4 p-5" delay={0.1}>
-              <p className="font-heading text-base leading-relaxed" style={{ color: "var(--primary)" }}>
-                {text.invitation_title}
-              </p>
-              <p className="whitespace-pre-line text-sm leading-7">{text.invitation_message}</p>
-              <div className="divider" />
-              <p className="text-sm font-semibold leading-7">{text.date_time}</p>
-              <p className="flex items-start justify-center gap-1 text-sm leading-7">
-                <MapPin size={16} className="mt-1.5 shrink-0" style={{ color: "var(--primary)" }} />
-                {text.location}
-              </p>
+            <p className="font-title text-xl leading-loose">
+              <Hosts
+                event={event}
+                amp={
+                  <span className="font-script mx-3 text-3xl" style={{ color: "var(--primary)" }}>
+                    &amp;
+                  </span>
+                }
+              />
+            </p>
+            <div className="divider mx-auto w-48" />
+            <p className="text-sm">{text.subtitle}</p>
+            <p className="font-title text-lg" style={{ color: "var(--guest)" }}>
+              {guest.name}
+            </p>
+          </Reveal>
+
+          {event.event_date && (
+            <Reveal className="mt-8" delay={0.05}>
+              <SaveTheDate date={event.event_date} lang={lang} label={t.saveTheDate} />
+            </Reveal>
+          )}
+
+          <Reveal className="card mt-8 space-y-4 p-5" delay={0.1}>
+            {parents && (
+              <>
+                <ParentsGrid
+                  sides={parents}
+                  labels={[t.parentsA, t.parentsB]}
+                  labelClassName="font-heading mb-1 text-xs leading-relaxed"
+                  labelStyle={{ color: "var(--primary)" }}
+                  nameClassName="text-sm leading-7"
+                />
+                <div className="divider" />
+              </>
+            )}
+            <p className="font-heading text-base leading-relaxed" style={{ color: "var(--primary)" }}>
+              {text.invitation_title}
+            </p>
+            <p className="whitespace-pre-line text-sm leading-7">{text.invitation_message}</p>
+            <div className="divider" />
+            <p className="text-sm font-semibold leading-7">{text.date_time}</p>
+            <p className="flex items-start justify-center gap-1 text-sm leading-7">
+              <MapPin size={16} className="mt-1.5 shrink-0" style={{ color: "var(--primary)" }} />
+              {text.location}
+            </p>
+          </Reveal>
+        </section>
+
+        {/* ---------- Countdown ---------- */}
+        {sections.countdown && event.event_date && (
+          <section className={sec("px-6 py-12")} style={{ background: gradient }}>
+            {band}
+            <Reveal>
+              <SectionTitle angkor={angkor}>{t.countdown}</SectionTitle>
+              <Countdown date={event.event_date} t={t} lang={lang} />
             </Reveal>
           </section>
-  
-          {/* ---------- Countdown ---------- */}
-          {sections.countdown && event.event_date && (
-            <section className="px-6 py-12" style={{ background: gradient }}>
-              <Reveal>
-                <SectionTitle>{t.countdown}</SectionTitle>
-                <Countdown date={event.event_date} t={t} />
-              </Reveal>
-            </section>
-          )}
-  
-          {/* ---------- Agenda ---------- */}
-          {sections.agenda && agenda.length > 0 && (
-            <section className="bg-cover bg-center px-6 py-14" style={bg(c.detailsBackground, gradient)}>
-              <Reveal>
-                <SectionTitle>{text.details_title}</SectionTitle>
-              </Reveal>
-              <div className="space-y-6">
-                {agenda.map((day) => (
-                  <Reveal key={day.id} className="card p-5">
-                    <p className="font-heading mb-4 text-center text-base leading-relaxed" style={{ color: "var(--primary)" }}>
-                      {day.title}
-                    </p>
-                    <ol className="relative ml-2 space-y-4 border-l pl-5" style={{ borderColor: "var(--primary)" }}>
-                      {day.items.map((it) => (
-                        <li key={it.id} className="relative">
+        )}
+
+        {/* ---------- Agenda ---------- */}
+        {sections.agenda && agenda.length > 0 && (
+          <section className={sec("bg-cover bg-center px-6 py-14")} style={bg(c.detailsBackground, gradient)}>
+            {band}
+            <Reveal>
+              <SectionTitle angkor={angkor}>{text.details_title}</SectionTitle>
+            </Reveal>
+            <div className="space-y-6">
+              {agenda.map((day) => (
+                <Reveal key={day.id} className="card p-5">
+                  <p className="font-heading mb-4 text-center text-base leading-relaxed" style={{ color: "var(--primary)" }}>
+                    {day.title}
+                  </p>
+                  <ol className="relative ml-2 space-y-4 border-l pl-5" style={{ borderColor: "var(--primary)" }}>
+                    {day.items.map((it) => (
+                      <li key={it.id} className="relative">
+                        {angkor ? (
+                          <LotusBud className="absolute -left-[28px] top-0 h-[18px] w-[14px]" style={{ color: "var(--primary)" }} />
+                        ) : (
                           <span
                             className="absolute -left-[27px] top-1.5 h-3 w-3 rounded-full border-2 border-white"
                             style={{ background: "var(--primary)" }}
                           />
-                          <p className="text-xs font-semibold tabular-nums opacity-80">{it.time}</p>
-                          <p className="text-sm">{it.name}</p>
-                        </li>
-                      ))}
-                    </ol>
-                  </Reveal>
-                ))}
-              </div>
-            </section>
-          )}
-  
-          {/* ---------- Our story ---------- */}
-          {sections.story && story.length > 0 && (
-            <section className="px-6 py-14">
-              <Reveal>
-                <SectionTitle>{t.story}</SectionTitle>
-              </Reveal>
-              <Story items={story} lang={lang} onZoom={setZoom} />
-            </section>
-          )}
-  
-          {/* ---------- Pre-wedding video ---------- */}
-          {sections.video && videos.length > 0 && (
-            <section className="px-4 py-14" style={{ background: "linear-gradient(180deg, #1c1917, #0c0a09)" }}>
-              <Reveal>
-                <SectionTitle>{t.video}</SectionTitle>
-              </Reveal>
-              <Videos videos={videos} t={t} onPlay={videoStarted} onStop={videoStopped} />
-            </section>
-          )}
-  
-          {/* ---------- Gallery ---------- */}
-          {sections.gallery && c.gallery.length > 0 && (
-            <section className="px-4 py-14" style={{ background: gradient }}>
-              <Reveal>
-                <SectionTitle>{t.gallery}</SectionTitle>
-              </Reveal>
-              <div className="grid grid-cols-2 gap-2">
-                {c.gallery.map((src, i) => {
-                  // Every 3rd photo is full width; a trailing photo left alone in its row is too.
-                  const wide = i % 3 === 0 || (i % 3 === 1 && i === c.gallery.length - 1);
-                  return (
-                  <Reveal key={src + i} delay={(i % 2) * 0.08} className={wide ? "col-span-2" : ""}>
-                    <button onClick={() => setZoom({ images: c.gallery, index: i })} className="block w-full overflow-hidden" style={{ borderRadius: "var(--radius)" }}>
-                      <Image
-                        src={src}
-                        alt=""
-                        unoptimized={unoptimized(src)}
-                        width={wide ? 960 : 480}
-                        height={wide ? 720 : 640}
-                        sizes={wide ? "(max-width: 480px) 100vw, 480px" : "(max-width: 480px) 50vw, 240px"}
-                        className={`w-full object-cover transition duration-500 hover:scale-105 ${wide ? "aspect-[4/3]" : "aspect-[3/4]"}`}
-                      />
-                    </button>
-                  </Reveal>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-  
-          {/* ---------- Location ---------- */}
-          {sections.map && (c.mapUrl || c.mapImage) && (
-            <section className="px-6 py-14">
-              <Reveal>
-                <SectionTitle>{t.location}</SectionTitle>
-                <div className="card overflow-hidden">
-                  {c.mapImage && <Image src={c.mapImage} alt="map" unoptimized={unoptimized(c.mapImage)} width={960} height={640} sizes="(max-width: 480px) 100vw, 480px" className="h-auto w-full object-cover" />}
-                  <div className="space-y-3 p-4 text-center">
-                    <p className="text-sm leading-7">{text.location}</p>
-                    {c.mapUrl && (
-                      <a href={c.mapUrl} target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
-                        <MapPin size={16} /> {t.openMap}
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </Reveal>
-            </section>
-          )}
-  
-          {/* ---------- RSVP ---------- */}
-          {sections.rsvp && (
-            <section className="px-6 py-12" style={{ background: gradient }}>
-              <Reveal>
-                <SectionTitle>{t.rsvp}</SectionTitle>
-                <Rsvp code={guest.code} initialStatus={guest.rsvp_status} initialCount={guest.rsvp_count} preview={preview} t={t} />
-              </Reveal>
-            </section>
-          )}
-  
-          {/* ---------- Wishes ---------- */}
-          {sections.wishes && (
-            <section className="px-6 py-12">
-              <Reveal>
-                <SectionTitle>{t.wishes}</SectionTitle>
-                <Wishes code={guest.code} initial={wishes} preview={preview} t={t} />
-              </Reveal>
-            </section>
-          )}
-  
-          {/* ---------- Gift ---------- */}
-          {sections.gift && (c.qrUsd || c.qrKhr) && (
-            <section className="px-6 py-12" style={{ background: gradient }}>
-              <Reveal>
-                <SectionTitle>{t.gift}</SectionTitle>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    ["USD", c.qrUsd],
-                    ["KHR", c.qrKhr],
-                  ]
-                    .filter(([, src]) => src)
-                    .map(([cur, src]) => (
-                      <button key={cur} onClick={() => setZoom({ images: [src], index: 0 })} className="card p-3 text-center">
-                        <img src={src} alt={`KHQR ${cur}`} className="mx-auto aspect-square w-full object-contain" />
-                        <p className="mt-2 text-sm font-semibold">{cur}</p>
-                      </button>
+                        )}
+                        <p className="text-xs font-semibold tabular-nums opacity-80">{it.time}</p>
+                        <p className="text-sm">{it.name}</p>
+                      </li>
                     ))}
+                  </ol>
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ---------- Our story ---------- */}
+        {sections.story && story.length > 0 && (
+          <section className={sec("px-6 py-14")} style={angkor ? { background: gradient } : undefined}>
+            {band}
+            <Reveal>
+              <SectionTitle angkor={angkor}>{t.story}</SectionTitle>
+            </Reveal>
+            <Story items={story} lang={lang} onZoom={setZoom} />
+          </section>
+        )}
+
+        {/* ---------- Pre-wedding video ---------- */}
+        {sections.video && videos.length > 0 && (
+          <section className="px-4 py-14" style={{ background: "linear-gradient(180deg, #1c1917, #0c0a09)" }}>
+            <Reveal>
+              <SectionTitle angkor={angkor}>{t.video}</SectionTitle>
+            </Reveal>
+            <Videos videos={videos} t={t} onPlay={videoStarted} onStop={videoStopped} />
+          </section>
+        )}
+
+        {/* ---------- Gallery ---------- */}
+        {sections.gallery && c.gallery.length > 0 && (
+          <section className={sec("px-4 py-14")} style={{ background: gradient }}>
+            {band}
+            <Reveal>
+              <SectionTitle angkor={angkor}>{t.gallery}</SectionTitle>
+            </Reveal>
+            <div className="grid grid-cols-2 gap-2">
+              {c.gallery.map((src, i) => {
+                // Every 3rd photo is full width; a trailing photo left alone in its row is too.
+                const wide = i % 3 === 0 || (i % 3 === 1 && i === c.gallery.length - 1);
+                return (
+                <Reveal key={src + i} delay={(i % 2) * 0.08} className={wide ? "col-span-2" : ""}>
+                  <button onClick={() => setZoom({ images: c.gallery, index: i })} className="photo block w-full overflow-hidden" style={{ borderRadius: "var(--radius)" }}>
+                    <Image
+                      src={src}
+                      alt=""
+                      unoptimized={unoptimized(src)}
+                      width={wide ? 960 : 480}
+                      height={wide ? 720 : 640}
+                      sizes={wide ? "(max-width: 480px) 100vw, 480px" : "(max-width: 480px) 50vw, 240px"}
+                      className={`w-full object-cover transition duration-500 hover:scale-105 ${wide ? "aspect-[4/3]" : "aspect-[3/4]"}`}
+                    />
+                  </button>
+                </Reveal>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ---------- Location ---------- */}
+        {sections.map && (c.mapUrl || c.mapImage) && (
+          <section className={sec("px-6 py-14")} style={angkor ? { background: gradient } : undefined}>
+            {band}
+            <Reveal>
+              <SectionTitle angkor={angkor}>{t.location}</SectionTitle>
+              <div className="card overflow-hidden">
+                {c.mapImage && <Image src={c.mapImage} alt="map" unoptimized={unoptimized(c.mapImage)} width={960} height={640} sizes="(max-width: 480px) 100vw, 480px" className="h-auto w-full object-cover" />}
+                <div className="space-y-3 p-4 text-center">
+                  <p className="text-sm leading-7">{text.location}</p>
+                  {c.mapUrl && (
+                    <a href={c.mapUrl} target="_blank" rel="noopener noreferrer" className="btn-primary inline-flex items-center gap-2 px-5 py-2 text-sm">
+                      <MapPin size={16} /> {t.openMap}
+                    </a>
+                  )}
                 </div>
-                {(c.accountName || c.accountNumber) && (
-                  <div className="card mt-3 p-3 text-center text-sm">
-                    {c.bankName && <p className="font-semibold">{c.bankName}</p>}
-                    {c.accountName && <p>{c.accountName}</p>}
-                    {c.accountNumber && <p className="tabular-nums">{c.accountNumber}</p>}
-                  </div>
-                )}
-                <p className="mt-2 text-center text-xs opacity-70">{t.giftNote}</p>
-              </Reveal>
-            </section>
-          )}
-  
-          {/* ---------- Gratitude ---------- */}
-          <section className="bg-cover bg-center px-6 pb-28 pt-14 text-center" style={bg(c.mainBackground, gradient)}>
-            <Reveal className="card space-y-4 p-6">
-              <Flourish />
-              <p className="font-heading text-base leading-relaxed" style={{ color: "var(--primary)" }}>
-                {text.gratitude_title}
-              </p>
-              <p className="whitespace-pre-line text-sm leading-7">{text.gratitude_message}</p>
-              <div className="divider" />
-              <p className="font-title text-lg leading-loose">
-                {event.groom} <span className="font-script text-2xl" style={{ color: "var(--primary)" }}>&amp;</span> {event.bride}
-              </p>
+              </div>
             </Reveal>
           </section>
-        </div>
-  
-        <Lightbox zoom={zoom} onChange={setZoom} />
+        )}
+
+        {/* ---------- RSVP ---------- */}
+        {sections.rsvp && (
+          <section className={sec("px-6 py-12")} style={{ background: gradient }}>
+            {band}
+            <Reveal>
+              <SectionTitle angkor={angkor}>{t.rsvp}</SectionTitle>
+              <Rsvp code={guest.code} initialStatus={guest.rsvp_status} initialCount={guest.rsvp_count} preview={preview} t={t} />
+            </Reveal>
+          </section>
+        )}
+
+        {/* ---------- Wishes ---------- */}
+        {sections.wishes && (
+          <section className={sec("px-6 py-12")} style={angkor ? { background: gradient } : undefined}>
+            {band}
+            <Reveal>
+              <SectionTitle angkor={angkor}>{t.wishes}</SectionTitle>
+              <Wishes code={guest.code} initial={wishes} preview={preview} t={t} />
+            </Reveal>
+          </section>
+        )}
+
+        {/* ---------- Gift ---------- */}
+        {sections.gift && (c.qrUsd || c.qrKhr) && (
+          <section className={sec("px-6 py-12")} style={{ background: gradient }}>
+            {band}
+            <Reveal>
+              <SectionTitle angkor={angkor}>{t.gift}</SectionTitle>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  ["USD", c.qrUsd],
+                  ["KHR", c.qrKhr],
+                ]
+                  .filter(([, src]) => src)
+                  .map(([cur, src]) => (
+                    <button key={cur} onClick={() => setZoom({ images: [src], index: 0 })} className="card plain p-3 text-center">
+                      <img src={src} alt={`KHQR ${cur}`} className="mx-auto aspect-square w-full object-contain" />
+                      <p className="mt-2 text-sm font-semibold">{cur}</p>
+                    </button>
+                  ))}
+              </div>
+              {(c.accountName || c.accountNumber) && (
+                <div className="card mt-3 p-3 text-center text-sm">
+                  {c.bankName && <p className="font-semibold">{c.bankName}</p>}
+                  {c.accountName && <p>{c.accountName}</p>}
+                  {c.accountNumber && <p className="tabular-nums">{c.accountNumber}</p>}
+                </div>
+              )}
+              <p className="mt-2 text-center text-xs opacity-70">{t.giftNote}</p>
+            </Reveal>
+          </section>
+        )}
+
+        {/* ---------- Gratitude ---------- */}
+        <section className={sec("bg-cover bg-center px-6 pb-28 pt-14 text-center")} style={bg(c.mainBackground, gradient)}>
+          {band}
+          <Reveal className="card space-y-4 p-6">
+            {angkor ? <Lotus className="mx-auto h-8 w-12" style={{ color: "var(--primary)" }} /> : <Flourish />}
+            <p className="font-heading text-base leading-relaxed" style={{ color: "var(--primary)" }}>
+              {text.gratitude_title}
+            </p>
+            <p className="whitespace-pre-line text-sm leading-7">{text.gratitude_message}</p>
+            <div className="divider" />
+            <p className="font-title text-lg leading-loose">
+              <Hosts
+                event={event}
+                amp={
+                  <>
+                    {" "}
+                    <span className="font-script text-2xl" style={{ color: "var(--primary)" }}>
+                      &amp;
+                    </span>{" "}
+                  </>
+                }
+              />
+            </p>
+          </Reveal>
+          {angkor && (
+            <Reveal className="mt-10" delay={0.15}>
+              <AngkorSkyline reflection={false} className="mx-auto w-full max-w-[340px] opacity-80" style={{ color: "var(--primary)" }} />
+            </Reveal>
+          )}
+        </section>
       </div>
-    </MotionConfig>
+
+      <Lightbox zoom={zoom} onChange={setZoom} />
+    </div>
   );
 }
 

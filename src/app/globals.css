@@ -56,3 +56,489 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .petal { animation: none; display: none; }
 }
+
+/* ---------- "angkor" theme: carved sandstone, gilding, kbach ornament ---------- */
+.theme-angkor {
+  --sandstone: #f4ead6;
+  --sandstone-deep: #e6d3ad;
+  --ak-corner-tl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform=''%3E%3Cpath d='M1.5 38V13Q1.5 1.5 13 1.5H38' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M6 34C6 17 17 6 34 6' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M10 27c0-10 7-17 17-17-5 2-7 6-4 8 2.4 1.4 4.4-1 3-2.8' fill='none' stroke='%23000' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M6 6c6.5.4 10 3.6 10 9.6C9.6 15.6 6.4 12.4 6 6Z'/%3E%3Ccircle cx='20' cy='20' r='1.3'/%3E%3C/g%3E%3C/svg%3E");
+  --ak-corner-tr: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform='translate(40 0) scale(-1 1)'%3E%3Cpath d='M1.5 38V13Q1.5 1.5 13 1.5H38' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M6 34C6 17 17 6 34 6' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M10 27c0-10 7-17 17-17-5 2-7 6-4 8 2.4 1.4 4.4-1 3-2.8' fill='none' stroke='%23000' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M6 6c6.5.4 10 3.6 10 9.6C9.6 15.6 6.4 12.4 6 6Z'/%3E%3Ccircle cx='20' cy='20' r='1.3'/%3E%3C/g%3E%3C/svg%3E");
+  --ak-corner-bl: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform='translate(0 40) scale(1 -1)'%3E%3Cpath d='M1.5 38V13Q1.5 1.5 13 1.5H38' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M6 34C6 17 17 6 34 6' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M10 27c0-10 7-17 17-17-5 2-7 6-4 8 2.4 1.4 4.4-1 3-2.8' fill='none' stroke='%23000' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M6 6c6.5.4 10 3.6 10 9.6C9.6 15.6 6.4 12.4 6 6Z'/%3E%3Ccircle cx='20' cy='20' r='1.3'/%3E%3C/g%3E%3C/svg%3E");
+  --ak-corner-br: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cg transform='translate(40 40) scale(-1 -1)'%3E%3Cpath d='M1.5 38V13Q1.5 1.5 13 1.5H38' fill='none' stroke='%23000' stroke-width='1.4'/%3E%3Cpath d='M6 34C6 17 17 6 34 6' fill='none' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M10 27c0-10 7-17 17-17-5 2-7 6-4 8 2.4 1.4 4.4-1 3-2.8' fill='none' stroke='%23000' stroke-width='1.2' stroke-linecap='round'/%3E%3Cpath d='M6 6c6.5.4 10 3.6 10 9.6C9.6 15.6 6.4 12.4 6 6Z'/%3E%3Ccircle cx='20' cy='20' r='1.3'/%3E%3C/g%3E%3C/svg%3E");
+  --ak-frieze: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 16'%3E%3Cpath d='M0 .5h20M0 15.5h20' stroke='%23000' stroke-width='1'/%3E%3Cpath d='M10 2.6c4.4 3.4 6 7.4 5.4 10.4H4.6C4 10 5.6 6 10 2.6Z'/%3E%3Ccircle cx='0' cy='11' r='1.2'/%3E%3Ccircle cx='20' cy='11' r='1.2'/%3E%3C/svg%3E");
+  --ak-rosette: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 56'%3E%3Cg transform='translate(28 28)'%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(0)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(45)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(90)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(135)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(180)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(225)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(270)'/%3E%3Cellipse rx='3' ry='8' cy='-9' transform='rotate(315)'/%3E%3Ccircle r='3.4'/%3E%3C/g%3E%3Cpath d='M0 0l4 4-4 4-4-4zM56 0l4 4-4 4-4-4zM0 56l4-4 4 4-4 4zM56 56l4-4-4-4-4 4z' transform='translate(0 -4)'/%3E%3Cpath d='M28 0v4M28 52v4M0 28h4M52 28h4' stroke='%23000'/%3E%3C/svg%3E");
+}
+.theme-angkor .temple-section {
+  position: relative;
+  isolation: isolate;
+}
+/* Sandstone grain + Ta Prohm-style floral medallions, very faint. */
+.theme-angkor .temple-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--primary);
+  opacity: 0.07;
+  -webkit-mask: var(--ak-rosette) center top / 56px 56px repeat;
+  mask: var(--ak-rosette) center top / 56px 56px repeat;
+}
+.theme-angkor .temple-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .3 0 0 0 0 .16 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.18;
+  mix-blend-mode: multiply;
+}
+
+/* Lotus-petal frieze (kbach trabak chuk) between sections, like the band under a lintel. */
+.theme-angkor .frieze {
+  height: 16px;
+  background-color: var(--primary);
+  -webkit-mask: var(--ak-frieze) left center / 20px 16px repeat-x;
+  mask: var(--ak-frieze) left center / 20px 16px repeat-x;
+  opacity: 0.85;
+}
+
+/* Cards: sandstone panel with a gilded double moulding and kbach scroll corners. */
+.theme-angkor .card {
+  position: relative;
+  background: color-mix(in srgb, var(--sandstone) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 70%, transparent);
+  box-shadow:
+    inset 0 0 0 3px color-mix(in srgb, var(--sandstone) 90%, transparent),
+    inset 0 0 0 4px color-mix(in srgb, var(--primary) 40%, transparent),
+    0 6px 18px -10px rgb(74 44 23 / 0.45);
+}
+.theme-angkor .card::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  pointer-events: none;
+  background-color: var(--primary);
+  --c: 22px;
+  -webkit-mask:
+    var(--ak-corner-tl) left top / var(--c) var(--c) no-repeat,
+    var(--ak-corner-tr) right top / var(--c) var(--c) no-repeat,
+    var(--ak-corner-bl) left bottom / var(--c) var(--c) no-repeat,
+    var(--ak-corner-br) right bottom / var(--c) var(--c) no-repeat;
+  mask:
+    var(--ak-corner-tl) left top / var(--c) var(--c) no-repeat,
+    var(--ak-corner-tr) right top / var(--c) var(--c) no-repeat,
+    var(--ak-corner-bl) left bottom / var(--c) var(--c) no-repeat,
+    var(--ak-corner-br) right bottom / var(--c) var(--c) no-repeat;
+}
+.theme-angkor .card.compact::before { --c: 14px; inset: 3px; }
+/* Nothing may sit on top of a QR code. */
+.theme-angkor .card.plain::before { display: none; }
+
+/* Countdown cells shaped like temple doorways. */
+.theme-angkor .count-cell {
+  border-radius: 999px 999px var(--radius) var(--radius);
+  padding-top: 1.1rem;
+}
+.theme-angkor .count-cell::before { display: none; }
+
+/* Gilded buttons. */
+.theme-angkor .btn-primary {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--primary) 70%, #fff) 0%,
+    var(--primary) 50%,
+    color-mix(in srgb, var(--primary) 80%, #000) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--primary) 70%, #000);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 4px 12px -4px rgb(74 44 23 / 0.5);
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.25);
+}
+
+/* Gallery photos in a thin gilded frame. */
+.theme-angkor .photo {
+  box-shadow: 0 0 0 1px var(--primary), 0 0 0 4px var(--sandstone), 0 0 0 5px color-mix(in srgb, var(--primary) 60%, transparent);
+}
+
+.theme-angkor .petal { border-radius: 50% 0 50% 0; }
+
+@keyframes sun-glow {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+.theme-angkor .sun { animation: sun-glow 6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .theme-angkor .sun { animation: none; }
+}
+
+/* ---------- "bloom" theme: watercolor florals, gold lettering, deep leaf green ---------- */
+.theme-bloom {
+  --gold-from: #facc15;
+  --gold-via: #fde047;
+  --gold-to: #ca8a04;
+  --green: #43652f;
+  --sage: #a5ae79;
+}
+/* Moul's tall stacked vowels clip at normal line-height. */
+.theme-bloom .font-title { line-height: 1.7; }
+.theme-bloom .bloom-title { line-height: 1.75; padding-block: 0.1em; }
+.theme-bloom .bloom-gold {
+  background-image: linear-gradient(100deg, var(--gold-to), var(--gold-from) 30%, var(--gold-via) 50%, var(--gold-from) 70%, var(--gold-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  /* A hairline shadow keeps pale gold legible on cream. */
+  filter: drop-shadow(0 1px 0 rgb(120 80 0 / 0.28));
+}
+/* Soft pink/purple washes behind the corner flowers. */
+.theme-bloom .bloom-wash {
+  background:
+    radial-gradient(60% 40% at 0% 0%, rgb(247 185 201 / 0.55), transparent 70%),
+    radial-gradient(45% 30% at 100% 0%, rgb(214 184 236 / 0.35), transparent 70%),
+    radial-gradient(45% 30% at 0% 100%, rgb(247 185 201 / 0.35), transparent 70%),
+    radial-gradient(60% 40% at 100% 100%, rgb(247 185 201 / 0.5), transparent 70%);
+}
+.theme-bloom .bloom-glass {
+  background: rgb(255 255 255 / 0.6);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  box-shadow: 0 6px 20px -10px rgb(67 101 47 / 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.theme-bloom .bloom-glass-green {
+  background: color-mix(in srgb, var(--green) 72%, transparent);
+  border: 1px solid rgb(255 255 255 / 0.35);
+  box-shadow: 0 10px 24px -14px color-mix(in srgb, var(--green) 90%, transparent), inset 0 1px 0 rgb(255 255 255 / 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.theme-bloom .bloom-card {
+  background: rgb(255 255 255 / 0.72);
+  border: 1px solid color-mix(in srgb, var(--gold-from) 55%, transparent);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 30px -18px rgb(120 90 40 / 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+/* Ornamental gold pill: double gold rim around a cream fill. */
+.theme-bloom .bloom-pill {
+  color: #7a5a06;
+  background: linear-gradient(180deg, #fffaf0, #fdf1cf);
+  border-radius: 9999px;
+  border: 1.5px solid var(--gold-to);
+  box-shadow: inset 0 0 0 3px #fffaf0, inset 0 0 0 4px color-mix(in srgb, var(--gold-from) 80%, transparent), 0 8px 22px -12px rgb(150 110 20 / 0.6);
+}
+/* Hero photo melts into the background at the top and bottom. */
+.theme-bloom .bloom-feather {
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 72%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 72%, transparent 100%);
+}
+.theme-bloom .bloom-scroll,
+.theme-bloom .bloom-inner-scroll { scrollbar-width: none; }
+.theme-bloom .bloom-scroll::-webkit-scrollbar,
+.theme-bloom .bloom-inner-scroll::-webkit-scrollbar { display: none; }
+/* Shared RSVP form, restyled for Bloom. */
+.theme-bloom .card {
+  background: rgb(255 255 255 / 0.72);
+  border: 1px solid color-mix(in srgb, var(--gold-from) 55%, transparent);
+  border-radius: 1.25rem;
+}
+.theme-bloom .btn-primary { background: var(--green); border-radius: 9999px; }
+
+/* ---------- "lotus" theme: olive envelope, gold lotus seal, cream / olive / night sections ---------- */
+.theme-lotus {
+  --lt-olive: #5b6339;
+  --lt-night: #23251b;
+  --lt-cream: #f4ecd8;
+  --lt-gold: #d9b768;
+  --lt-gold-light: #f7e6ad;
+  --lt-gold-deep: #a27a2c;
+  --lt-ink: #4b5230;
+}
+/* Moul's stacked vowels clip at normal line-height. */
+.theme-lotus .font-title { line-height: 1.8; }
+.theme-lotus .lt-cream {
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgb(255 255 255 / 0.55), transparent 70%),
+    var(--lt-cream);
+  color: var(--lt-ink);
+}
+.theme-lotus .lt-olive {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lt-olive) 92%, #fff), var(--lt-olive) 30%, color-mix(in srgb, var(--lt-olive) 85%, #000));
+  color: #f1e9d4;
+}
+.theme-lotus .lt-deep {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lt-olive) 70%, #000), color-mix(in srgb, var(--lt-olive) 45%, var(--lt-night)));
+  color: #f1e9d4;
+}
+.theme-lotus .lt-night {
+  background: radial-gradient(100% 50% at 50% 0%, color-mix(in srgb, var(--lt-olive) 30%, var(--lt-night)), var(--lt-night) 70%);
+  color: #f1e9d4;
+}
+
+/* Shimmering gold lettering (on dark or photo backgrounds). */
+.theme-lotus .lt-gold {
+  display: inline-block;
+  padding-block: 0.08em;
+  background-image: linear-gradient(100deg, var(--lt-gold-deep) 0%, var(--lt-gold) 22%, var(--lt-gold-light) 38%, var(--lt-gold) 52%, var(--lt-gold-deep) 70%, var(--lt-gold) 85%, var(--lt-gold-light) 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.35));
+  animation: lt-shimmer 7s linear infinite;
+}
+/* Deeper gold for cream backgrounds, where pale gold would vanish. */
+.theme-lotus .lt-gold-ink {
+  display: inline-block;
+  padding-block: 0.08em;
+  background-image: linear-gradient(100deg, color-mix(in srgb, var(--lt-gold-deep) 80%, #000), var(--lt-gold-deep) 35%, var(--lt-gold) 50%, var(--lt-gold-deep) 65%, color-mix(in srgb, var(--lt-gold-deep) 80%, #000));
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lt-shimmer 9s linear infinite;
+}
+.theme-lotus .lt-gold-soft { color: var(--lt-gold-light); }
+/* Inline-block keeps the gradient as wide as the text; block-level tags still need their own line. */
+.theme-lotus :is(p, h1, h2, h3).lt-gold,
+.theme-lotus :is(p, h1, h2, h3).lt-gold-ink { display: block; }
+@keyframes lt-shimmer {
+  from { background-position: 0% 50%; }
+  to { background-position: 220% 50%; }
+}
+
+/* The envelope's name card. */
+.theme-lotus .lt-card {
+  background:
+    radial-gradient(120% 90% at 30% 20%, #fffdf6, transparent 60%),
+    linear-gradient(160deg, var(--lt-cream), color-mix(in srgb, var(--lt-cream) 85%, #c9b68a));
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.6);
+}
+
+/* Arched photo with a double gold rim. */
+.theme-lotus .lt-arch {
+  box-shadow: 0 0 0 1.5px var(--lt-gold), 0 0 0 7px var(--lt-cream), 0 0 0 8.5px color-mix(in srgb, var(--lt-gold) 70%, transparent), 0 24px 40px -20px rgb(60 50 20 / 0.6);
+}
+/* Love-story photo frame. */
+.theme-lotus .lt-frame {
+  border: 3px solid var(--lt-gold-light);
+  outline: 1px solid color-mix(in srgb, var(--lt-gold) 70%, transparent);
+  outline-offset: 3px;
+  box-shadow: 0 20px 36px -18px rgb(0 0 0 / 0.8);
+}
+
+/* Gilded pill buttons. */
+.theme-lotus .lt-pill {
+  color: #3b2f12;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, var(--lt-gold-light) 0%, var(--lt-gold) 55%, color-mix(in srgb, var(--lt-gold-deep) 85%, var(--lt-gold)) 100%);
+  border: 1px solid var(--lt-gold-deep);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), 0 8px 18px -10px rgb(0 0 0 / 0.7);
+  transition: transform 0.2s, filter 0.2s;
+}
+.theme-lotus .lt-pill:hover { filter: brightness(1.06); }
+.theme-lotus .lt-pill:active { transform: scale(0.97); }
+
+/* Round floating controls. */
+.theme-lotus .lt-ctl {
+  color: #fff;
+  background: rgb(20 20 14 / 0.45);
+  border: 1px solid rgb(255 255 255 / 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Shared RSVP form and wish form. */
+.theme-lotus .card {
+  color: var(--lt-ink);
+  background: color-mix(in srgb, var(--lt-cream) 96%, #fff);
+  border: 1px solid color-mix(in srgb, var(--lt-gold) 70%, transparent);
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--lt-cream) 96%, #fff), inset 0 0 0 4px color-mix(in srgb, var(--lt-gold) 35%, transparent), 0 18px 30px -18px rgb(0 0 0 / 0.7);
+}
+.theme-lotus .btn-primary {
+  color: #3b2f12;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, var(--lt-gold-light), var(--lt-gold) 55%, var(--lt-gold-deep));
+}
+
+/* Countdown watermark drifting sideways. */
+.theme-lotus .lt-marquee { animation: lt-marquee 40s linear infinite; }
+@keyframes lt-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* Candles. */
+.theme-lotus .lt-flame {
+  transform-origin: 50% 90%;
+  animation: lt-flicker 1.6s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 6px rgb(255 200 90 / 0.9));
+}
+.theme-lotus .lt-glow {
+  background: radial-gradient(circle, rgb(255 210 120 / 0.45), transparent 65%);
+  animation: lt-glow 2.4s ease-in-out infinite alternate;
+}
+@keyframes lt-flicker {
+  0% { transform: scale(1, 1) rotate(-1deg); }
+  30% { transform: scale(0.94, 1.06) rotate(1.5deg); }
+  60% { transform: scale(1.04, 0.95) rotate(-2deg); }
+  100% { transform: scale(0.97, 1.04) rotate(1deg); }
+}
+@keyframes lt-glow {
+  from { opacity: 0.6; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1.08); }
+}
+
+.theme-lotus .lt-noscroll { scrollbar-width: none; }
+.theme-lotus .lt-noscroll::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-lotus .lt-gold,
+  .theme-lotus .lt-gold-ink,
+  .theme-lotus .lt-marquee,
+  .theme-lotus .lt-flame,
+  .theme-lotus .lt-glow { animation: none; }
+}
+
+/* ============================================================ Garden theme */
+.theme-garden {
+  --gd-green: #2f5a46;
+  --gd-leaf: #7f9c74;
+  --gd-ivory: #fbfaf6;
+  --gd-ink: #2f4d3f;
+  color: var(--gd-ink);
+}
+/* Khmer stacked vowels clip at normal line-height. */
+.theme-garden .font-title { line-height: 1.85; }
+.theme-garden .gd-green { color: var(--gd-green); }
+.theme-garden .gd-script,
+.theme-garden .gd-mono {
+  font-family: "Great Vibes", cursive;
+  color: var(--gd-green);
+}
+.theme-garden .gd-mono > span { display: block; }
+
+/* White silk: broad soft folds under every section. */
+.theme-garden .gd-silk {
+  /* A repeating gradient has no seams, however tall the page grows. */
+  background: repeating-linear-gradient(112deg, #ffffff 0, #f1f0ec 130px, #fdfdfb 230px, #eae9e5 360px, #ffffff 500px);
+}
+.theme-garden .gd-paper {
+  background:
+    radial-gradient(110% 70% at 50% 30%, #ffffff, transparent 75%),
+    var(--gd-ivory);
+}
+
+/* Drawn silk curtain: vertical folds with a soft fall-off at the hem. */
+.theme-garden .gd-curtain {
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.5), transparent 25%, transparent 75%, rgb(200 198 190 / 0.25)),
+    repeating-linear-gradient(90deg, #ffffff 0, #f6f6f3 3.2%, #e2e1dc 5.6%, #f4f4f1 7.6%, #ffffff 10%, #fbfbf9 12%);
+  transition: clip-path 2.4s cubic-bezier(0.65, 0, 0.25, 1) 0.15s;
+}
+
+/* Cards, buttons and controls. */
+.theme-garden .gd-card {
+  background: rgb(255 255 255 / 0.92);
+  border: 1px solid rgb(47 90 70 / 0.08);
+  border-radius: 18px;
+  box-shadow: 0 16px 34px -20px rgb(40 60 50 / 0.45), 0 2px 6px -2px rgb(40 60 50 / 0.08);
+}
+.theme-garden .gd-wish {
+  background: linear-gradient(180deg, #ffffff, #f8f8f5);
+  border: 1px solid rgb(47 90 70 / 0.1);
+  border-radius: 14px;
+  min-height: 9rem;
+}
+.theme-garden .gd-photo {
+  border-radius: 18px;
+  border: 4px solid #fff;
+  box-shadow: 0 18px 34px -18px rgb(40 50 45 / 0.55);
+}
+.theme-garden .gd-btn {
+  color: #fff;
+  border-radius: 12px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gd-green) 85%, #fff), var(--gd-green) 60%, color-mix(in srgb, var(--gd-green) 80%, #000));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 10px 20px -12px color-mix(in srgb, var(--gd-green) 80%, #000);
+  transition: transform 0.2s, filter 0.2s;
+}
+.theme-garden .gd-btn-ghost {
+  color: var(--gd-green);
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--gd-green) 35%, transparent);
+  transition: transform 0.2s;
+}
+.theme-garden :is(.gd-btn, .gd-btn-ghost):hover { filter: brightness(1.06); }
+.theme-garden :is(.gd-btn, .gd-btn-ghost):active { transform: scale(0.97); }
+.theme-garden .gd-ctl {
+  color: var(--gd-green);
+  background: rgb(255 255 255 / 0.8);
+  border: 1px solid rgb(47 90 70 / 0.15);
+  box-shadow: 0 6px 16px -8px rgb(30 40 35 / 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Shared RSVP form. */
+.theme-garden .card {
+  color: var(--gd-ink);
+  background: rgb(255 255 255 / 0.92);
+  border: 1px solid rgb(47 90 70 / 0.1);
+  border-radius: 18px;
+  box-shadow: 0 16px 34px -20px rgb(40 60 50 / 0.45);
+}
+.theme-garden .btn-primary {
+  color: #fff;
+  border-radius: 12px;
+  background: var(--gd-green);
+}
+
+/* Ivy sways gently from where it hangs. */
+.theme-garden .gd-vine {
+  transform-box: view-box;
+  animation: gd-sway 5s ease-in-out infinite alternate;
+}
+@keyframes gd-sway {
+  from { transform: rotate(-2.5deg); }
+  to { transform: rotate(2.5deg); }
+}
+.theme-garden .gd-twinkle { animation: gd-twinkle 3s ease-in-out infinite; }
+@keyframes gd-twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Leaves drifting down the screen. */
+.theme-garden .gd-leaf {
+  color: color-mix(in srgb, var(--gd-leaf) 85%, #fff);
+  opacity: 0;
+  animation-name: gd-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes gd-fall {
+  0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(0deg); }
+  10% { opacity: 0.8; }
+  35% { transform: translate3d(28px, 35vh, 0) rotate(120deg); }
+  65% { transform: translate3d(-22px, 68vh, 0) rotate(230deg); }
+  90% { opacity: 0.7; }
+  100% { opacity: 0; transform: translate3d(14px, 105vh, 0) rotate(340deg); }
+}
+
+.theme-garden .gd-noscroll { scrollbar-width: none; }
+.theme-garden .gd-noscroll::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-garden .gd-vine,
+  .theme-garden .gd-twinkle,
+  .theme-garden .gd-leaf { animation: none; }
+  .theme-garden .gd-curtain { transition-duration: 0.01s; }
+}

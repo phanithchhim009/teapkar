@@ -6,8 +6,17 @@ import { useEffect } from "react";
 
 export type Zoom = { images: string[]; index: number } | null;
 
+type Props =
+  | { zoom: Zoom; onChange: (z: Zoom) => void }
+  /** A single photo, as the Bloom, Lotus and Garden themes use it. */
+  | { src: string | null; onClose: () => void };
+
 /** Full-screen photo viewer. Swipe, arrow keys or the side buttons page through `images`. */
-export function Lightbox({ zoom, onChange }: { zoom: Zoom; onChange: (z: Zoom) => void }) {
+export function Lightbox(props: Props) {
+  const { zoom, onChange } =
+    "zoom" in props
+      ? props
+      : { zoom: props.src ? { images: [props.src], index: 0 } : null, onChange: (z: Zoom) => !z && props.onClose() };
   const count = zoom?.images.length ?? 0;
   const go = (d: -1 | 1) => zoom && count > 1 && onChange({ ...zoom, index: (zoom.index + d + count) % count });
   const close = () => onChange(null);

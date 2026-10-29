@@ -6,35 +6,42 @@ import type { Labels } from "./i18n";
 
 export type PublicWish = { id: string; message: string; name: string; created_at: string };
 
-export function Wishes({ code, initial, preview, t }: { code: string; initial: PublicWish[]; preview: boolean; t: Labels }) {
+/** Wish list state + posting, shared by every theme's guestbook UI. */
+export function useWishes({ code, initial, preview, t }: { code: string; initial: PublicWish[]; preview: boolean; t: Labels }) {
   const [wishes, setWishes] = useState(initial);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, start] = useTransition();
 
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = message.trim();
+    if (!text) return;
+    setError("");
+    if (preview) {
+      setWishes((w) => [{ id: crypto.randomUUID(), message: text, name: "Preview", created_at: new Date().toISOString() }, ...w]);
+      setMessage("");
+      return;
+    }
+    start(async () => {
+      const res = await submitWish({ code, message: text });
+      if (res.ok) {
+        setWishes((w) => [res.wish, ...w]);
+        setMessage("");
+      } else setError(res.error === "limit" ? t.wishLimit : t.error);
+    });
+  };
+
+  return { wishes, message, setMessage, error, pending, submit };
+}
+
+export function Wishes(props: { code: string; initial: PublicWish[]; preview: boolean; t: Labels }) {
+  const { t } = props;
+  const { wishes, message, setMessage, error, pending, submit } = useWishes(props);
+
   return (
     <div className="space-y-4">
-      <form
-        className="card space-y-3 p-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const text = message.trim();
-          if (!text) return;
-          setError("");
-          if (preview) {
-            setWishes((w) => [{ id: crypto.randomUUID(), message: text, name: "Preview", created_at: new Date().toISOString() }, ...w]);
-            setMessage("");
-            return;
-          }
-          start(async () => {
-            const res = await submitWish({ code, message: text });
-            if (res.ok) {
-              setWishes((w) => [res.wish, ...w]);
-              setMessage("");
-            } else setError(res.error === "limit" ? t.wishLimit : t.error);
-          });
-        }}
-      >
+      <form className="card space-y-3 p-4" onSubmit={submit}>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
@@ -53,7 +60,7 @@ export function Wishes({ code, initial, preview, t }: { code: string; initial: P
       {wishes.length > 0 && (
         <ul className="max-h-96 space-y-2 overflow-y-auto pr-1">
           {wishes.map((w) => (
-            <li key={w.id} className="card p-3 text-sm">
+            <li key={w.id} className="card compact p-3 text-sm">
               <p className="whitespace-pre-line">{w.message}</p>
               <p className="mt-1 text-right text-xs font-semibold" style={{ color: "var(--primary)" }}>
                 — {w.name}

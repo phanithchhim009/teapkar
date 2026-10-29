@@ -1,6 +1,8 @@
-insert into public.event (id, groom, bride, event_date, config, text_kh, text_en, sections)
+insert into public.event (id, type, name, host_a, host_b, event_date, config, text_kh, text_en, sections)
 values (
   1,
+  'wedding',
+  'ឈឹម ផានិត & សន លក្ខណា',
   'ឈឹម ផានិត',
   'សន លក្ខណា',
   '2026-12-20T17:00:00+07:00',
@@ -54,9 +56,11 @@ values (
 )
 on conflict (id) do nothing;
 
+select setval('public.event_id_seq', (select max(id) from public.event));
+
 with d as (
-  insert into public.schedule_day (title, date, sort)
-  values ('កម្មវិធីថ្ងៃទីមួយ៖ អាទិត្យ ទី២០ ខែធ្នូ ២០២៦', '2026-12-20', 0)
+  insert into public.schedule_day (event_id, title, date, sort)
+  values (1, 'កម្មវិធីថ្ងៃទីមួយ៖ អាទិត្យ ទី២០ ខែធ្នូ ២០២៦', '2026-12-20', 0)
   returning id
 )
 insert into public.timeline_item (day_id, time, name, sort)
@@ -68,5 +72,5 @@ from d, (values
   ('05:00 PM', 'ពិសារភោជនាហារ', 3)
 ) as t(time, name, sort);
 
-insert into public.guest (code, name, group_tag) values ('demo2026', 'Vibol Khan', 'Friends')
+insert into public.guest (event_id, code, name, group_tag) values (1, 'demo2026', 'Vibol Khan', 'Friends')
 on conflict (code) do nothing;
