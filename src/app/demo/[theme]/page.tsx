@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { FontLinks } from "@/components/invite/FontLinks";
 import { Invitation } from "@/components/invite/Invitation";
-import { demoAgenda, demoEvent, demoWishes } from "@/lib/demo";
+import { demoAgenda, demoBirthday, demoEvent, demoWishes } from "@/lib/demo";
 import { THEMES, type Theme } from "@/lib/types";
 
-type Props = { params: Promise<{ theme: string }>; searchParams: Promise<{ lang?: string; palette?: string }> };
+type Props = { params: Promise<{ theme: string }>; searchParams: Promise<{ lang?: string; palette?: string; type?: string }> };
 
 const isTheme = (t: string): t is Theme => (THEMES as readonly string[]).includes(t);
 
@@ -25,17 +25,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 /** Public sample invitation for each style. Runs in preview mode, so RSVPs and wishes are never saved. */
 export default async function DemoPage({ params, searchParams }: Props) {
   const { theme } = await params;
-  const { lang, palette } = await searchParams;
+  const { lang, palette, type } = await searchParams;
   if (!isTheme(theme)) notFound();
-  const event = await demoEvent(theme, palette);
+  // `?type=birthday` shows the birthday sample instead of the wedding.
+  const { event, agenda, wishes } =
+    type === "birthday" ? await demoBirthday(theme) : { event: await demoEvent(theme, palette), agenda: demoAgenda, wishes: demoWishes };
   return (
     <>
       <FontLinks config={event.config} />
       <Invitation
         preview
         event={event}
-        agenda={demoAgenda}
-        wishes={demoWishes}
+        agenda={agenda}
+        wishes={wishes}
         initialLang={lang === "en" ? "en" : "kh"}
         guest={{ code: "demo", name: "ភ្ញៀវកិត្តិយស", lang: "kh", rsvp_status: "pending", rsvp_count: 0 }}
       />

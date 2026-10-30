@@ -54,8 +54,8 @@ const LUNAR_HINT = "Shown under the date. Copy it from a Khmer calendar; leave e
 const SECTION_LABELS: Record<(typeof SECTION_KEYS)[number], string> = {
   countdown: "Countdown timer",
   agenda: "Agenda",
-  story: "Our love story",
-  video: "Pre-wedding video",
+  story: "Story timeline",
+  video: "Video",
   gallery: "Photo gallery",
   map: "Location / map",
   rsvp: "RSVP",
@@ -80,6 +80,7 @@ function fromLocalInput(value: string) {
 const THEME_OPTIONS: { id: Theme; name: string; desc: string }[] = [
   { id: "classic", name: "Classic", desc: "Warm cream and amber with floating petals" },
   { id: "royal", name: "Royal red & gold", desc: "Traditional Khmer wedding maroon and gold on ivory" },
+  { id: "party", name: "Party", desc: "For birthdays: raspberry and lilac with balloons, confetti and a big age badge" },
   { id: "angkor", name: "Angkor temple", desc: "Sandstone and gold: Angkor Wat skyline, naga arch, lotus and kbach ornament" },
   { id: "bloom", name: "Bloom", desc: "Watercolor florals and gold lettering, with an animated arch intro and scroll reveals" },
   { id: "lotus", name: "Lotus envelope", desc: "Olive envelope with a gold lotus seal that opens; gold on cream, olive and night, love story, candles" },
@@ -213,6 +214,22 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
                   <Input value={data.host_b} onChange={(e) => patch({ host_b: e.target.value })} />
                 </Field>
               )}
+              {data.type === "birthday" && (
+                <Field label="Age they're turning (optional)" hint="Shown as a round “គម្រប់អាយុ ៣០ ឆ្នាំ / Turning 30” badge. Leave empty to hide.">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={150}
+                    inputMode="numeric"
+                    value={data.config.age ?? ""}
+                    onChange={(e) => {
+                      const n = Math.round(Number(e.target.value));
+                      cfg("age", e.target.value === "" || !Number.isFinite(n) || n < 1 || n > 150 ? null : n);
+                    }}
+                    placeholder="30"
+                  />
+                </Field>
+              )}
             </div>
             <Field label="Event date & time (Cambodia time)" hint="Used for the countdown. The displayed date text is edited in the Text tab.">
               <Input
@@ -292,7 +309,7 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
           </Card>
         )}
 
-        {tab === "Agenda" && <AgendaEditor eventId={data.id} initial={agenda} onSaved={() => setPreviewKey((k) => k + 1)} />}
+        {tab === "Agenda" && <AgendaEditor eventId={data.id} eventType={data.type} initial={agenda} onSaved={() => setPreviewKey((k) => k + 1)} />}
 
         {tab === "Story" && lotus && (
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
@@ -300,7 +317,7 @@ export function CustomizeEditor({ initial, agenda }: { initial: EventData; agend
           </p>
         )}
 
-        {tab === "Story" && <StoryEditor value={data.config.story} onChange={(v) => cfg("story", v)} />}
+        {tab === "Story" && <StoryEditor eventType={data.type} value={data.config.story} onChange={(v) => cfg("story", v)} />}
 
         {tab === "Video" && <VideoEditor value={data.config.videos} onChange={(v) => cfg("videos", v)} />}
 

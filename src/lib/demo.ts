@@ -125,3 +125,106 @@ export const demoWishes: PublicWish[] = [
   { id: "w1", message: "សូមជូនពរឲ្យគូស្វាមីភរិយាថ្មី មានសុភមង្គល និងស្រឡាញ់គ្នារហូតដល់ចាស់ជរា!", name: "បងស្រី ស្រីពៅ", created_at: "2026-11-01T10:00:00Z" },
   { id: "w2", message: "Congratulations to you both! Wishing you a lifetime of love and happiness.", name: "Dara & Lina", created_at: "2026-11-02T10:00:00Z" },
 ];
+
+/* ---------- birthday demo ---------- */
+
+/** A sample birthday (Party style by default) for /demo/[style]?type=birthday. */
+export async function demoBirthday(theme: Theme): Promise<{ event: EventData; agenda: ScheduleDay[]; wishes: PublicWish[] }> {
+  const event: EventData = {
+    id: 0,
+    type: "birthday",
+    name: "ខួបកំណើត ឈឹម ផានិត",
+    host_a: "ឈឹម ផានិត",
+    host_b: "",
+    event_date: "2026-11-14T11:00:00.000Z",
+    config: eventConfigSchema.parse({
+      theme,
+      ...THEME_PRESETS[theme],
+      age: 30,
+      coverBackground: `${D}/cover.webp`,
+      mapUrl: "https://maps.app.goo.gl/9Wh42r1JEXaL6PXJ9",
+      qrUsd: await demoQr("USD"),
+      qrKhr: await demoQr("KHR"),
+      bankName: "ABA",
+      accountName: "CHHIM PHANITH",
+      accountNumber: "000 000 000",
+      gallery: [`${D}/g1.webp`, `${D}/g2.webp`, `${D}/g3.webp`, `${D}/g4.webp`],
+      story: [
+        {
+          id: "b1",
+          date: "ឆ្នាំ២០០២ · ថ្ងៃចូលរៀន",
+          photo: `${D}/story-1.webp`,
+          title_kh: "ថ្ងៃដំបូងនៅសាលារៀន",
+          title_en: "First day of school",
+          text_kh: "កាបូបធំជាងខ្លួន តែចិត្តចង់រៀនធំជាងនោះទៅទៀត។",
+          text_en: "A school bag bigger than me, and an even bigger wish to learn.",
+        },
+        {
+          id: "b2",
+          date: "ឆ្នាំ២០១៨ · បញ្ចប់ការសិក្សា",
+          photo: `${D}/story-3.webp`,
+          title_kh: "ថ្ងៃបញ្ចប់ការសិក្សា",
+          title_en: "Graduation day",
+          text_kh: "អរគុណឪពុកម្តាយ និងគ្រូ ដែលតែងនៅក្បែរ។",
+          text_en: "Thank you to my parents and teachers for always being there.",
+        },
+        {
+          id: "b3",
+          date: "ឆ្នាំ២០២០ · ការងារដំបូង",
+          photo: `${D}/story-2.webp`,
+          title_kh: "ការងារដំបូង",
+          title_en: "My first job",
+          text_kh: "កាហ្វេមួយកែវរៀងរាល់ព្រឹក និងក្តីស្រមៃថ្មីៗ។",
+          text_en: "A coffee every morning and lots of new dreams.",
+        },
+      ],
+      videos: [{ id: "v1", src: `${D}/prewedding.mp4`, poster: `${D}/poster.webp` }],
+    }),
+    text_kh: invitationTextSchema.parse({
+      main_title: "ពិធីខួបកំណើត",
+      subtitle: "សូមគោរពអញ្ជើញ",
+      invitation_title: "សូមអញ្ជើញចូលរួមអបអរសាទរខួបកំណើត",
+      invitation_message:
+        "ខ្ញុំមានសេចក្តីសោមនស្សរីករាយ សូមគោរពអញ្ជើញ លោក លោកស្រី បងប្អូន និងមិត្តភក្តិទាំងអស់ ចូលរួមអបអរសាទរខួបកំណើតគម្រប់អាយុ ៣០ ឆ្នាំ របស់ខ្ញុំ ដើម្បីចែករំលែកក្តីសុខ និងស្នាមញញឹមជាមួយគ្នា។",
+      date_time: "ថ្ងៃសៅរ៍ ទី១៤ ខែវិច្ឆិកា ឆ្នាំ២០២៦ វេលាម៉ោង ៦:០០ ល្ងាច",
+      location: "ភោជនីយដ្ឋានមាត់ទន្លេ រាជធានីភ្នំពេញ។",
+      details_title: "របៀបវារៈកម្មវិធី",
+      gratitude_title: "សូមអរគុណ",
+      gratitude_message: "សូមអរគុណចំពោះវត្តមាន និងពាក្យជូនពររបស់លោកអ្នក ដែលធ្វើឲ្យថ្ងៃខួបកំណើតរបស់ខ្ញុំកាន់តែពិសេស។",
+    }),
+    text_en: invitationTextSchema.parse({
+      main_title: "Birthday Party",
+      subtitle: "You are invited",
+      invitation_title: "JOIN ME TO CELEBRATE",
+      invitation_message: "Please join me to celebrate my 30th birthday with good food, music and great company.",
+      date_time: "Saturday, November 14, 2026 at 6:00 PM",
+      location: "Riverside restaurant, Phnom Penh.",
+      details_title: "PROGRAM",
+      gratitude_title: "THANK YOU",
+      gratitude_message: "Thank you for your presence and kind wishes. You make my birthday extra special.",
+    }),
+    sections: sectionsSchema.parse({}),
+  };
+
+  const steps: [string, string][] = [
+    ["06:00 PM", "ទទួលភ្ញៀវ"],
+    ["06:30 PM", "ពិសាអាហារ"],
+    ["07:30 PM", "ផ្លុំទៀន និងកាត់នំខួបកំណើត"],
+    ["08:00 PM", "ថតរូបអនុស្សាវរីយ៍"],
+    ["08:30 PM", "រាំកម្សាន្ត"],
+  ];
+  const agenda: ScheduleDay[] = [
+    {
+      id: "bday",
+      title: "ថ្ងៃសៅរ៍ ទី១៤ ខែវិច្ឆិកា ឆ្នាំ២០២៦",
+      date: "2026-11-14",
+      sort: 0,
+      items: steps.map(([time, name], i) => ({ id: `bday-${i}`, day_id: "bday", time, name, sort: i })),
+    },
+  ];
+  const wishes: PublicWish[] = [
+    { id: "bw1", message: "រីករាយថ្ងៃខួបកំណើត! សូមឲ្យមានសុខភាពល្អ និងជោគជ័យគ្រប់ភារកិច្ច។", name: "បងស្រី ស្រីពៅ", created_at: "2026-11-01T10:00:00Z" },
+    { id: "bw2", message: "Happy 30th birthday! Wishing you an amazing year ahead.", name: "Dara", created_at: "2026-11-02T10:00:00Z" },
+  ];
+  return { event, agenda, wishes };
+}

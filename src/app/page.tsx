@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Balloons } from "@/components/invite/party";
 import type { Theme } from "@/lib/types";
 
 export const metadata: Metadata = {
@@ -103,6 +104,9 @@ export default function Home() {
             <a href="#styles" className="hover:underline">
               គំរូសំបុត្រ
             </a>
+            <a href="#birthday" className="hover:underline">
+              ខួបកំណើត
+            </a>
             <a href="#how" className="hidden hover:underline sm:inline">
               របៀបធ្វើ
             </a>
@@ -128,6 +132,13 @@ export default function Home() {
             ភ្ញៀវម្នាក់ៗទទួលបានសំបុត្រដែលមានឈ្មោះផ្ទាល់ខ្លួន ផ្ញើតាម Telegram បានភ្លាមៗ។ ឆ្លើយតបការចូលរួម ផ្ញើពរ និងចំណងដៃតាម KHQR — ទាំងអស់ក្នុងតំណតែមួយ។
           </p>
           <p className="text-sm text-[#7a5a2e]">Personal digital wedding invitations for Cambodian couples — in Khmer and English.</p>
+          <p className="text-sm">
+            🎂 ក៏មាន
+            <a href="#birthday" className="mx-1 font-semibold underline underline-offset-4" style={{ color: MAROON }}>
+              សំបុត្រខួបកំណើត
+            </a>
+            ផងដែរ · Birthday invitations too
+          </p>
           <div className="flex flex-wrap justify-center gap-3 md:justify-start">
             <a href="#styles" className="inline-flex items-center gap-2 rounded-full px-6 py-3 font-medium text-white shadow-md hover:opacity-90" style={{ background: MAROON }}>
               មើលគំរូសំបុត្រ
@@ -208,6 +219,40 @@ export default function Home() {
               </div>
             </Link>
           ))}
+        </div>
+      </section>
+
+      {/* ---------- Birthdays ---------- */}
+      <section id="birthday" className="scroll-mt-16 border-t border-[#ead9bd] py-16" style={{ background: "linear-gradient(160deg, #fff5fb, #f1e6fb)" }}>
+        <div className="mx-auto grid max-w-5xl items-center gap-8 px-4 md:grid-cols-[1fr_1.2fr]">
+          <Balloons className="mx-auto h-48 text-[#4a2545] md:h-64" />
+          <div className="space-y-4 text-center md:text-left">
+            <h2 className="text-2xl leading-loose text-[#c2185b]" style={{ fontFamily: '"Moul", serif' }}>
+              សំបុត្រខួបកំណើត
+            </h2>
+            <p className="text-sm text-[#6a1b9a]">Birthday invitations</p>
+            <p className="leading-7 text-[#4a2545]">
+              រចនាប័ទ្ម Party ពណ៌ផ្កាឈូក និងស្វាយ ជាមួយប៉េងប៉ោង ក្រដាសពណ៌ និងស្លាកអាយុ «គម្រប់អាយុ ៣០ ឆ្នាំ»។ ភ្ញៀវឆ្លើយតបការចូលរួម ផ្ញើពាក្យជូនពរ និងអំណោយតាម KHQR បានដូចសំបុត្រការដែរ។
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 md:justify-start">
+              <Link
+                href="/demo/party?type=birthday"
+                target="_blank"
+                className="inline-flex items-center gap-2 rounded-full px-6 py-3 font-medium text-white shadow-md hover:opacity-90"
+                style={{ background: "#c2185b" }}
+              >
+                🎈 មើលគំរូ Party
+              </Link>
+              <Link
+                href="/demo/royal?type=birthday"
+                target="_blank"
+                className="inline-flex items-center gap-2 rounded-full border border-[#c2185b] px-6 py-3 font-medium text-[#c2185b] hover:bg-white"
+              >
+                គំរូ Royal សម្រាប់ខួបកំណើត
+              </Link>
+            </div>
+            <p className="text-xs text-[#4a2545]/70">គ្រប់រចនាប័ទ្មទាំងអស់ អាចប្រើសម្រាប់ខួបកំណើតបាន · Every style works for birthdays.</p>
+          </div>
         </div>
       </section>
 

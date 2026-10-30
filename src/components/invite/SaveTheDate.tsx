@@ -15,7 +15,7 @@ const NAMES = {
   },
 };
 
-const khNum = (n: number) => String(n).replace(/\d/g, (d) => KH_DIGITS[Number(d)]);
+export const khNum = (n: number) => String(n).replace(/\d/g, (d) => KH_DIGITS[Number(d)]);
 
 export function SaveTheDate({ date, lang, label }: { date: string; lang: Lang; label: string }) {
   const d = new Date(new Date(date).getTime() + OFFSET_MS);

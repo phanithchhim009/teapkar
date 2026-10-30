@@ -15,9 +15,38 @@ type EventTypeInfo = {
   text: Record<Lang, Partial<InvitationText>>;
 };
 
+// "ធៀប" and "Pre-Wedding" are wedding words; other events use the plain "សំបុត្រ" (invitation) and neutral headings.
 const NEUTRAL_LABELS: Record<Lang, Partial<Labels>> = {
-  kh: { schedule: "របៀបវារៈកម្មវិធី", gift: "អំណោយ", khqr: "អំណោយតាម KHQR", started: "ថ្ងៃកម្មវិធីបានមកដល់ហើយ!" },
-  en: { schedule: "Event Schedule", gift: "Gift", wishPlaceholder: "Write your wishes...", started: "The day is here!" },
+  kh: {
+    open: "បើកសំបុត្រ",
+    schedule: "របៀបវារៈកម្មវិធី",
+    gift: "អំណោយ",
+    khqr: "អំណោយតាម KHQR",
+    started: "ថ្ងៃកម្មវិធីបានមកដល់ហើយ!",
+    story: "អនុស្សាវរីយ៍",
+    video: "វីដេអូ",
+  },
+  en: { schedule: "Event Schedule", gift: "Gift", wishPlaceholder: "Write your wishes...", started: "The day is here!", story: "Memories", video: "Video" },
+};
+
+const BIRTHDAY_LABELS: Record<Lang, Partial<Labels>> = {
+  kh: {
+    ...NEUTRAL_LABELS.kh,
+    story: "ដំណើរជីវិត",
+    gift: "អំណោយខួបកំណើត",
+    khqr: "អំណោយខួបកំណើតតាម KHQR",
+    wishes: "ពាក្យជូនពរខួបកំណើត",
+    wishPlaceholder: "សរសេរពាក្យជូនពរខួបកំណើត...",
+    started: "ថ្ងៃខួបកំណើតបានមកដល់ហើយ!",
+  },
+  en: {
+    ...NEUTRAL_LABELS.en,
+    story: "My Story",
+    gift: "Birthday Gift",
+    wishes: "Birthday Wishes",
+    wishPlaceholder: "Write a birthday wish...",
+    started: "It's party time!",
+  },
 };
 
 export const EVENT_TYPE_INFO: Record<EventType, EventTypeInfo> = {
@@ -75,7 +104,7 @@ export const EVENT_TYPE_INFO: Record<EventType, EventTypeInfo> = {
     pair: false,
     hostLabels: ["Celebrant", ""],
     shareTitle: { kh: "ខួបកំណើត", en: "Birthday of" },
-    labels: NEUTRAL_LABELS,
+    labels: BIRTHDAY_LABELS,
     text: {
       kh: {
         main_title: "ពិធីខួបកំណើត",

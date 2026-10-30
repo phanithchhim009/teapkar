@@ -4,7 +4,7 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { saveAgenda } from "@/app/actions/admin";
 import { unwrap } from "@/lib/action-result";
-import type { ScheduleDay } from "@/lib/types";
+import type { EventType, ScheduleDay } from "@/lib/types";
 import { Button, Card, Input } from "./ui";
 
 type Item = { key: string; time: string; name: string };
@@ -12,18 +12,16 @@ type Day = { key: string; title: string; date: string; items: Item[] };
 
 const key = () => Math.random().toString(36).slice(2);
 
-/** Common Khmer wedding ceremony steps, roughly in the order they happen; one tap adds one to the day. */
-const CEREMONY_STEPS = [
-  "ហែជំនូន",
-  "សូត្រមន្ត",
-  "សែនក្រុងពាលី",
-  "កាត់សក់",
-  "បង្វិលពពិល",
-  "សំពះផ្ទឹម",
-  "ចងដៃ",
-  "បាចផ្កាស្លា",
-  "ពិសាភោជនាហារ",
-];
+const WEDDING_STEPS = ["ហែជំនូន", "សូត្រមន្ត", "សែនក្រុងពាលី", "កាត់សក់", "បង្វិលពពិល", "សំពះផ្ទឹម", "ចងដៃ", "បាចផ្កាស្លា", "ពិសាភោជនាហារ"];
+
+/** Common steps for each kind of event, roughly in the order they happen; one tap adds one to the day. */
+const QUICK_STEPS: Record<EventType, string[]> = {
+  wedding: WEDDING_STEPS,
+  engagement: ["ហែជំនូន", "សូត្រមន្ត", "ពាក់ចិញ្ចៀន", "ពិសាភោជនាហារ"],
+  birthday: ["ទទួលភ្ញៀវ", "ពិធីសូត្រមន្ត", "ផ្លុំទៀន និងកាត់នំខួបកំណើត", "ពិសាអាហារ", "ថតរូបអនុស្សាវរីយ៍", "រាំកម្សាន្ត"],
+  housewarming: ["ពិធីសូត្រមន្ត", "ប្រគេនចង្ហាន់ព្រះសង្ឃ", "ទទួលភ្ញៀវ", "ពិសាអាហារ"],
+  other: ["ទទួលភ្ញៀវ", "ពិសាអាហារ"],
+};
 
 function swap<T>(arr: T[], i: number, j: number) {
   if (j < 0 || j >= arr.length) return arr;
@@ -32,7 +30,17 @@ function swap<T>(arr: T[], i: number, j: number) {
   return next;
 }
 
-export function AgendaEditor({ eventId, initial, onSaved }: { eventId: number; initial: ScheduleDay[]; onSaved: () => void }) {
+export function AgendaEditor({
+  eventId,
+  eventType,
+  initial,
+  onSaved,
+}: {
+  eventId: number;
+  eventType: EventType;
+  initial: ScheduleDay[];
+  onSaved: () => void;
+}) {
   const [days, setDays] = useState<Day[]>(() =>
     initial.map((d) => ({
       key: d.id,
@@ -81,7 +89,7 @@ export function AgendaEditor({ eventId, initial, onSaved }: { eventId: number; i
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-xs text-neutral-500">Quick add:</span>
-            {CEREMONY_STEPS.map((name) => (
+            {QUICK_STEPS[eventType].map((name) => (
               <button
                 key={name}
                 type="button"

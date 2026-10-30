@@ -14,6 +14,7 @@ import { Hosts } from "./Hosts";
 import { labelsFor, type Lang } from "./i18n";
 import { Lightbox, type Zoom } from "./Lightbox";
 import { ParentsGrid, weddingParents } from "./parents";
+import { AgeBadge, Balloons, CONFETTI } from "./party";
 import { LotusInvitation } from "./lotus/LotusInvitation";
 import { unoptimized } from "./media";
 import { Flourish, Reveal, SectionTitle } from "./Reveal";
@@ -143,12 +144,17 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
 
   const angkor = c.theme === "angkor";
   const royal = c.theme === "royal";
+  const party = c.theme === "party";
   const parents = weddingParents(event, text);
+  // Birthdays show "turning N" when an age is set.
+  const age = event.type === "birthday" ? c.age : null;
   const gradient = angkor
     ? `linear-gradient(180deg, #f8f1e3, #efe1c3)`
     : royal
       ? `linear-gradient(160deg, #fffaf0, #f4e2c3)`
-      : `linear-gradient(160deg, #fffaf2, color-mix(in srgb, ${c.primaryColor} 18%, #fff))`;
+      : party
+        ? `linear-gradient(160deg, #fff5fb, #f1e6fb)`
+        : `linear-gradient(160deg, #fffaf2, color-mix(in srgb, ${c.primaryColor} 18%, #fff))`;
   const petalColor = royal ? "#c9a227" : `color-mix(in srgb, ${c.primaryColor} 55%, #fff)`;
   // The couple's photo opens the page once the cover lifts; without one, the text block is the first screen.
   const heroPhoto = c.coverBackground || c.gallery[0] || "";
@@ -239,13 +245,15 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
                       }
                     />
                   </p>
+                  {age && <AgeBadge age={age} lang={lang} t={t} />}
                 </div>
               )}
 
               {/* Without a cover photo, the date fills the middle of the card instead of empty space. */}
-              {!angkor && !c.coverBackground && event.event_date && (
+              {!angkor && !c.coverBackground && (party || event.event_date) && (
                 <div className="relative w-full">
-                  <SaveTheDate date={event.event_date} lang={lang} label={t.saveTheDate} />
+                  {party && <Balloons className="mx-auto mb-3 h-28 text-[var(--text)]" />}
+                  {event.event_date && <SaveTheDate date={event.event_date} lang={lang} label={t.saveTheDate} />}
                 </div>
               )}
 
@@ -326,7 +334,7 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
           )}
         </AnimatePresence>
 
-        <Petals color={petalColor} />
+        <Petals color={petalColor} confetti={party} />
 
         {/* ---------- Hero photo ---------- */}
         {heroPhoto && (
@@ -347,6 +355,11 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
                   }
                 />
               </motion.p>
+              {age && (
+                <motion.div {...enter(0.22)} className="[text-shadow:none]">
+                  <AgeBadge age={age} lang={lang} t={t} />
+                </motion.div>
+              )}
               {text.date_time && (
                 <motion.p {...enter(0.3)} className="text-sm leading-7">
                   {text.date_time}
@@ -388,6 +401,7 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
                 }
               />
             </p>
+            {age && <AgeBadge age={age} lang={lang} t={t} />}
             <div className="divider mx-auto w-48" />
             <p className="text-sm">{text.subtitle}</p>
             <p className="font-title text-lg" style={{ color: "var(--guest)" }}>
@@ -661,10 +675,11 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
   );
 }
 
-function Petals({ color }: { color: string }) {
-  // Deterministic positions so server and client render the same markup. Six small, soft petals: enough to feel
+/** Floating petals, or colourful confetti (strips and dots) for the Party style. */
+function Petals({ color, confetti = false }: { color: string; confetti?: boolean }) {
+  // Deterministic positions so server and client render the same markup. A handful of small pieces: enough to feel
   // alive without covering text or costing frames on cheaper phones.
-  const petals = Array.from({ length: 6 }, (_, i) => ({
+  const petals = Array.from({ length: confetti ? 8 : 6 }, (_, i) => ({
     left: 6 + ((i * 37) % 88),
     size: 7 + ((i * 5) % 6),
     duration: 12 + ((i * 5) % 10),
@@ -675,12 +690,12 @@ function Petals({ color }: { color: string }) {
       {petals.map((p, i) => (
         <span
           key={i}
-          className="petal absolute -bottom-6 rounded-[50%_0_50%_0] opacity-50"
+          className={`petal absolute -bottom-6 ${confetti ? (i % 2 ? "rounded-full opacity-70" : "rounded-[2px] opacity-70") : "rounded-[50%_0_50%_0] opacity-50"}`}
           style={{
             left: `${p.left}%`,
-            width: p.size,
+            width: confetti && i % 2 === 0 ? p.size * 0.5 : p.size,
             height: p.size,
-            background: color,
+            background: confetti ? CONFETTI[i % CONFETTI.length] : color,
             animationDuration: `${p.duration}s`,
             animationDelay: `${p.delay}s`,
           }}

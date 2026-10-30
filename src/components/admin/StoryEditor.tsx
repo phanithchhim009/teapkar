@@ -1,13 +1,29 @@
 "use client";
 
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
-import type { StoryItem } from "@/lib/types";
+import type { EventType, StoryItem } from "@/lib/types";
 import { MediaUpload } from "./MediaUpload";
 import { Button, Card, Field, Input, Textarea } from "./ui";
 
 const key = () => Math.random().toString(36).slice(2);
 
 const EMPTY: Omit<StoryItem, "id"> = { date: "", photo: "", title_kh: "", title_en: "", text_kh: "", text_en: "" };
+
+// Couples tell how they met; everyone else shares life milestones.
+const COPY = {
+  love: {
+    intro: "Tell how you met, chapter by chapter: high school, first date, the proposal… Each chapter shows as a step on a timeline.",
+    date: ["2015 · High school", "“2015 · High school” or “ឆ្នាំ២០១៥”"],
+    titleKh: "ជួបគ្នាដំបូងនៅវិទ្យាល័យ",
+    titleEn: "We met in high school",
+  },
+  life: {
+    intro: "Share life milestones, step by step: born, school days, graduation, first job… Each one shows as a step on a timeline.",
+    date: ["1996 · Born", "“1996 · Born” or “ឆ្នាំ២០១៨ · បញ្ចប់ការសិក្សា”"],
+    titleKh: "ថ្ងៃបញ្ចប់ការសិក្សា",
+    titleEn: "Graduation day",
+  },
+};
 
 function swap<T>(arr: T[], i: number, j: number) {
   if (j < 0 || j >= arr.length) return arr;
@@ -16,15 +32,15 @@ function swap<T>(arr: T[], i: number, j: number) {
   return next;
 }
 
-/** Edits the "Our story" timeline. Changes are saved with the page's main Save button. */
-export function StoryEditor({ value, onChange }: { value: StoryItem[]; onChange: (v: StoryItem[]) => void }) {
+/** Edits the story timeline (love story for couples, life milestones otherwise). Changes are saved with the page's main Save button. */
+export function StoryEditor({ eventType, value, onChange }: { eventType: EventType; value: StoryItem[]; onChange: (v: StoryItem[]) => void }) {
+  const copy = eventType === "wedding" || eventType === "engagement" ? COPY.love : COPY.life;
   const patch = (i: number, p: Partial<StoryItem>) => onChange(value.map((s, j) => (j === i ? { ...s, ...p } : s)));
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-neutral-500">
-        Tell how you met, chapter by chapter: high school, first date, the proposal… Each chapter shows as a step on a timeline. Fill in Khmer, English or both;
-        if one language is empty the other is shown.
+        {copy.intro} Fill in Khmer, English or both; if one language is empty the other is shown.
       </p>
 
       {value.map((s, i) => (
@@ -52,17 +68,17 @@ export function StoryEditor({ value, onChange }: { value: StoryItem[]; onChange:
 
           <div className="grid gap-4 sm:grid-cols-[1fr_1.4fr]">
             <MediaUpload label="Photo" value={s.photo} onChange={(v) => patch(i, { photo: v })} />
-            <Field label="Date / period" hint="Shown as a label, e.g. “2015 · High school” or “ឆ្នាំ២០១៥”">
-              <Input value={s.date} onChange={(e) => patch(i, { date: e.target.value })} placeholder="2015 · High school" />
+            <Field label="Date / period" hint={`Shown as a label, e.g. ${copy.date[1]}`}>
+              <Input value={s.date} onChange={(e) => patch(i, { date: e.target.value })} placeholder={copy.date[0]} />
             </Field>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Title (ខ្មែរ)">
-              <Input value={s.title_kh} onChange={(e) => patch(i, { title_kh: e.target.value })} placeholder="ជួបគ្នាដំបូងនៅវិទ្យាល័យ" />
+              <Input value={s.title_kh} onChange={(e) => patch(i, { title_kh: e.target.value })} placeholder={copy.titleKh} />
             </Field>
             <Field label="Title (English)">
-              <Input value={s.title_en} onChange={(e) => patch(i, { title_en: e.target.value })} placeholder="We met in high school" />
+              <Input value={s.title_en} onChange={(e) => patch(i, { title_en: e.target.value })} placeholder={copy.titleEn} />
             </Field>
             <Field label="Story (ខ្មែរ)">
               <Textarea rows={4} value={s.text_kh} onChange={(e) => patch(i, { text_kh: e.target.value })} />

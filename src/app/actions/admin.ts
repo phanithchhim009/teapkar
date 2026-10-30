@@ -13,7 +13,7 @@ import { eventTag, wishesTag } from "@/lib/event";
 import { EVENT_TYPE_INFO } from "@/lib/event-types";
 import { newGuestCode } from "@/lib/guest-code";
 import { db, MEDIA_BUCKET } from "@/lib/supabase/server";
-import { EVENT_TYPES, eventConfigSchema, invitationTextSchema, sectionsSchema } from "@/lib/types";
+import { EVENT_TYPES, eventConfigSchema, invitationTextSchema, sectionsSchema, THEME_PRESETS } from "@/lib/types";
 
 /** Runs an action for any signed-in user, returning failures as data so their messages reach the client in production. */
 async function userAction<T>(fn: (user: User) => Promise<T>): Promise<ActionResult<T>> {
@@ -158,7 +158,8 @@ export async function createEvent(input: NewEventInput) {
     const data = newEventSchema.parse(input);
     const info = EVENT_TYPE_INFO[data.type];
     let design: Record<string, unknown> = {
-      config: eventConfigSchema.parse({}),
+      // Birthdays start in the Party style; everything else in Classic. Either can be changed under Theme.
+      config: eventConfigSchema.parse(data.type === "birthday" ? { theme: "party", ...THEME_PRESETS.party } : {}),
       text_kh: invitationTextSchema.parse(info.text.kh),
       text_en: invitationTextSchema.parse(info.text.en),
       sections: sectionsSchema.parse({}),
