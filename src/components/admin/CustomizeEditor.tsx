@@ -80,7 +80,8 @@ function fromLocalInput(value: string) {
 const THEME_OPTIONS: { id: Theme; name: string; desc: string }[] = [
   { id: "classic", name: "Classic", desc: "Warm cream and amber with floating petals" },
   { id: "royal", name: "Royal red & gold", desc: "Traditional Khmer wedding maroon and gold on ivory" },
-  { id: "party", name: "Party", desc: "For birthdays: raspberry and lilac with balloons, confetti and a big age badge" },
+  { id: "party", name: "Party", desc: "For birthdays: raspberry and lilac with balloons, confetti, fireworks and a big age badge" },
+  { id: "gala", name: "Dinner party", desc: "Evening celebrations: night sky with stars, gold lettering and fireworks" },
   { id: "angkor", name: "Angkor temple", desc: "Sandstone and gold: Angkor Wat skyline, naga arch, lotus and kbach ornament" },
   { id: "bloom", name: "Bloom", desc: "Watercolor florals and gold lettering, with an animated arch intro and scroll reveals" },
   { id: "lotus", name: "Lotus envelope", desc: "Olive envelope with a gold lotus seal that opens; gold on cream, olive and night, love story, candles" },

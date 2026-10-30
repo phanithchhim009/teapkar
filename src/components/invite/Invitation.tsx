@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, MotionConfig, useMotionValueEvent, useScroll } from "framer-motion";
-import { Check, ChevronDown, Copy, MapPin, Music, VolumeX } from "lucide-react";
+import { Cake, Camera, Check, ChevronDown, Copy, MapPin, Music, PartyPopper, Sparkles, UtensilsCrossed, VolumeX, type LucideIcon } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { trackOpen } from "@/app/actions/guest";
@@ -9,6 +9,7 @@ import type { EventData, ScheduleDay } from "@/lib/types";
 import { AngkorSkyline, Lotus, LotusBud, NagaArch } from "./angkor/Ornaments";
 import { BloomInvitation } from "./bloom/BloomInvitation";
 import { Countdown } from "./Countdown";
+import { Fireworks } from "./Fireworks";
 import { GardenInvitation } from "./garden/GardenInvitation";
 import { Hosts } from "./Hosts";
 import { labelsFor, type Lang } from "./i18n";
@@ -46,6 +47,20 @@ function bg(url: string, fallback: string) {
   const safe = url.replace(/["\\\n\r]/g, encodeURIComponent);
   return url ? { backgroundImage: `url("${safe}")` } : { background: fallback };
 }
+
+// Stable arrays (module level) so the fireworks effect doesn't restart on every render.
+const PARTY_FIREWORKS = ["#f06292", "#ffb300", "#4fc3f7", "#81c784", "#ba68c8", "#ffe082"];
+const GALA_FIREWORKS = ["#ffd98a", "#e8c26a", "#ffffff", "#f8bbd0", "#b39ddb"];
+
+/** Party icons for agenda steps on birthdays: cake, dinner, music, photos, welcome. */
+const AGENDA_ICONS: [RegExp, LucideIcon][] = [
+  [/នំ|cake/i, Cake],
+  [/អាហារ|ភោជនា|dinner|meal|food/i, UtensilsCrossed],
+  [/រាំ|តន្ត្រី|ច្រៀង|dance|music|sing/i, Music],
+  [/ថតរូប|photo/i, Camera],
+  [/ទទួលភ្ញៀវ|welcome|reception/i, PartyPopper],
+];
+const agendaIcon = (name: string) => AGENDA_ICONS.find(([re]) => re.test(name))?.[1] ?? Sparkles;
 
 export function Invitation(props: Props) {
   // Bloom, Lotus and Garden have their own component trees; classic and angkor share the one below.
@@ -98,8 +113,14 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
     [c, lang],
   );
 
+  // Bumped to launch a fireworks show (festive styles only).
+  const [fireworks, setFireworks] = useState(0);
+  const celebrate = () => setFireworks((n) => n + 1);
+
   const open = () => {
     setOpened(true);
+    // Let the cover start lifting first, then light up the sky.
+    if (c.theme === "party" || c.theme === "gala") window.setTimeout(celebrate, 450);
     if (audio.current && c.music) {
       audio.current.play().then(() => setPlaying(true)).catch(() => {});
     }
@@ -145,6 +166,9 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
   const angkor = c.theme === "angkor";
   const royal = c.theme === "royal";
   const party = c.theme === "party";
+  const gala = c.theme === "gala";
+  // Celebration styles get fireworks and agenda icons.
+  const festive = party || gala;
   const parents = weddingParents(event, text);
   // Birthdays show "turning N" when an age is set.
   const age = event.type === "birthday" ? c.age : null;
@@ -154,8 +178,10 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
       ? `linear-gradient(160deg, #fffaf0, #f4e2c3)`
       : party
         ? `linear-gradient(160deg, #fff5fb, #f1e6fb)`
-        : `linear-gradient(160deg, #fffaf2, color-mix(in srgb, ${c.primaryColor} 18%, #fff))`;
-  const petalColor = royal ? "#c9a227" : `color-mix(in srgb, ${c.primaryColor} 55%, #fff)`;
+        : gala
+          ? `radial-gradient(120% 70% at 50% 0%, #3a1f5c 0%, #1a1033 55%, #0d0920 100%)`
+          : `linear-gradient(160deg, #fffaf2, color-mix(in srgb, ${c.primaryColor} 18%, #fff))`;
+  const petalColor = royal ? "#c9a227" : gala ? "#e8c26a" : `color-mix(in srgb, ${c.primaryColor} 55%, #fff)`;
   // The couple's photo opens the page once the cover lifts; without one, the text block is the first screen.
   const heroPhoto = c.coverBackground || c.gallery[0] || "";
   // First-screen content waits for the cover to lift, so the guest actually sees it arrive.
@@ -171,10 +197,10 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
   const band = angkor ? <div aria-hidden className="frieze absolute inset-x-0 top-0" /> : null;
 
   return (
-    <div className={`invite min-h-dvh bg-neutral-900 ${angkor ? "theme-angkor" : ""}`} style={themeVars}>
+    <div className={`invite min-h-dvh bg-neutral-900 ${angkor ? "theme-angkor" : ""} ${gala ? "theme-gala" : ""}`} style={themeVars}>
       {c.music && <audio ref={audio} src={c.music} loop preload="none" />}
 
-      <div className="relative mx-auto min-h-dvh max-w-[480px] overflow-hidden bg-white shadow-2xl">
+      <div className={`relative mx-auto min-h-dvh max-w-[480px] overflow-hidden shadow-2xl ${gala ? "stars bg-[#120b26]" : "bg-white"}`}>
         {/* ---------- Cover ---------- */}
         <AnimatePresence>
           {!opened && (
@@ -200,7 +226,9 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
                   className="absolute inset-0"
                   style={{
                     background:
-                      "linear-gradient(180deg, rgb(255 250 242 / 0.88) 0%, rgb(255 250 242 / 0.55) 28%, rgb(255 250 242 / 0) 45%, rgb(255 250 242 / 0) 58%, rgb(255 250 242 / 0.7) 75%, rgb(255 250 242 / 0.92) 100%)",
+                      gala
+                        ? "linear-gradient(180deg, rgb(18 11 38 / 0.85) 0%, rgb(18 11 38 / 0.5) 28%, rgb(18 11 38 / 0) 45%, rgb(18 11 38 / 0) 58%, rgb(18 11 38 / 0.65) 75%, rgb(18 11 38 / 0.9) 100%)"
+                        : "linear-gradient(180deg, rgb(255 250 242 / 0.88) 0%, rgb(255 250 242 / 0.55) 28%, rgb(255 250 242 / 0) 45%, rgb(255 250 242 / 0) 58%, rgb(255 250 242 / 0.7) 75%, rgb(255 250 242 / 0.92) 100%)",
                   }}
                 />
               )}
@@ -314,6 +342,15 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
                 aria-label="Toggle music"
               >
                 {playing ? <Music size={18} className="animate-spin [animation-duration:3s]" /> : <VolumeX size={18} />}
+              </button>
+            )}
+            {festive && (
+              <button
+                onClick={celebrate}
+                className="btn-primary pointer-events-auto flex h-11 w-11 items-center justify-center rounded-full! text-lg shadow-lg"
+                aria-label="Fireworks"
+              >
+                🎆
               </button>
             )}
           </div>
@@ -479,6 +516,18 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
                       <li key={it.id} className="relative">
                         {angkor ? (
                           <LotusBud className="absolute -left-[28px] top-0 h-[18px] w-[14px]" style={{ color: "var(--primary)" }} />
+                        ) : festive || event.type === "birthday" ? (
+                          (() => {
+                            const Icon = agendaIcon(it.name);
+                            return (
+                              <span
+                                className="absolute -left-[33px] top-0 flex h-6 w-6 items-center justify-center rounded-full shadow-sm ring-2 ring-white/70"
+                                style={{ background: "var(--primary)", color: "var(--on-primary, #fff)" }}
+                              >
+                                <Icon size={13} />
+                              </span>
+                            );
+                          })()
                         ) : (
                           <span
                             className="absolute -left-[27px] top-1.5 h-3 w-3 rounded-full border-2 border-white"
@@ -584,7 +633,14 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
             {band}
             <Reveal>
               <SectionTitle angkor={angkor}>{t.rsvp}</SectionTitle>
-              <Rsvp code={guest.code} initialStatus={guest.rsvp_status} initialCount={guest.rsvp_count} preview={preview} t={t} />
+              <Rsvp
+                code={guest.code}
+                initialStatus={guest.rsvp_status}
+                initialCount={guest.rsvp_count}
+                preview={preview}
+                t={t}
+                onAnswered={(status) => festive && status === "yes" && celebrate()}
+              />
             </Reveal>
           </section>
         )}
@@ -670,6 +726,7 @@ function ClassicInvitation({ event, agenda, guest, wishes, initialLang, preview 
         </section>
       </div>
 
+      {festive && <Fireworks show={fireworks} colors={gala ? GALA_FIREWORKS : PARTY_FIREWORKS} rockets={gala ? 7 : 6} glow={gala} />}
       <Lightbox zoom={zoom} onChange={setZoom} />
     </div>
   );

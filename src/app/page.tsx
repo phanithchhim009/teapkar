@@ -232,7 +232,7 @@ export default function Home() {
             </h2>
             <p className="text-sm text-[#6a1b9a]">Birthday invitations</p>
             <p className="leading-7 text-[#4a2545]">
-              រចនាប័ទ្ម Party ពណ៌ផ្កាឈូក និងស្វាយ ជាមួយប៉េងប៉ោង ក្រដាសពណ៌ និងស្លាកអាយុ «គម្រប់អាយុ ៣០ ឆ្នាំ»។ ភ្ញៀវឆ្លើយតបការចូលរួម ផ្ញើពាក្យជូនពរ និងអំណោយតាម KHQR បានដូចសំបុត្រការដែរ។
+              រចនាប័ទ្ម Party ពណ៌ផ្កាឈូក និងស្វាយ ឬ Dinner party ពេលយប់ ជាមួយកាំជ្រួច ប៉េងប៉ោង និងស្លាកអាយុ «គម្រប់អាយុ ៣០ ឆ្នាំ»។ ភ្ញៀវឆ្លើយតបការចូលរួម ផ្ញើពាក្យជូនពរ និងអំណោយតាម KHQR បានដូចសំបុត្រការដែរ។
             </p>
             <div className="flex flex-wrap justify-center gap-3 md:justify-start">
               <Link
@@ -244,11 +244,12 @@ export default function Home() {
                 🎈 មើលគំរូ Party
               </Link>
               <Link
-                href="/demo/royal?type=birthday"
+                href="/demo/gala?type=birthday"
                 target="_blank"
-                className="inline-flex items-center gap-2 rounded-full border border-[#c2185b] px-6 py-3 font-medium text-[#c2185b] hover:bg-white"
+                className="inline-flex items-center gap-2 rounded-full px-6 py-3 font-medium text-[#ffd98a] shadow-md hover:opacity-90"
+                style={{ background: "linear-gradient(160deg, #3a1f5c, #1a1033)" }}
               >
-                គំរូ Royal សម្រាប់ខួបកំណើត
+                🎆 Dinner party ពេលយប់
               </Link>
             </div>
             <p className="text-xs text-[#4a2545]/70">គ្រប់រចនាប័ទ្មទាំងអស់ អាចប្រើសម្រាប់ខួបកំណើតបាន · Every style works for birthdays.</p>

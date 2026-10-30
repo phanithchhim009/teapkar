@@ -33,8 +33,30 @@ body {
 .invite .font-script { font-family: var(--font-script), cursive; }
 .invite .btn-primary {
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary, #fff);
   border-radius: var(--radius);
+}
+
+/* ---------- Dinner party (night sky, gold lettering) ---------- */
+/* Root has both classes; .invite.theme-gala outranks the general .invite .card rule below. */
+.invite.theme-gala { --on-primary: #1a1033; }
+.invite.theme-gala .card {
+  background: rgb(255 255 255 / 0.07);
+  border-color: color-mix(in srgb, var(--primary) 45%, transparent);
+}
+.invite.theme-gala textarea { background-color: rgb(255 255 255 / 0.08); color: var(--text); }
+.invite.theme-gala textarea::placeholder { color: color-mix(in srgb, var(--text) 55%, transparent); }
+/* A scatter of tiny stars over the night sections. */
+.theme-gala .stars {
+  background-image:
+    radial-gradient(1.2px 1.2px at 12% 18%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 33% 72%, #ffe9b0 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 58% 12%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 76% 44%, #fff 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 88% 82%, #ffe9b0 50%, transparent 51%),
+    radial-gradient(1px 1px at 22% 52%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 66% 90%, #fff 50%, transparent 51%);
+  background-size: 260px 260px;
 }
 /* No backdrop blur: it costs ~10 fps while scrolling on mid-range Android, and a near-opaque card looks the same. */
 .invite .card {

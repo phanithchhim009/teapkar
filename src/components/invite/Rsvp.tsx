@@ -12,12 +12,15 @@ export function Rsvp({
   initialCount,
   preview,
   t,
+  onAnswered,
 }: {
   code: string;
   initialStatus: Status;
   initialCount: number;
   preview: boolean;
   t: Labels;
+  /** Called after the reply is saved, e.g. to celebrate a "yes". */
+  onAnswered?: (status: "yes" | "no") => void;
 }) {
   const [saved, setSaved] = useState<Status>(initialStatus);
   const [editing, setEditing] = useState(initialStatus === "pending");
@@ -51,6 +54,7 @@ export function Rsvp({
         if (preview) {
           setSaved(choice);
           setEditing(false);
+          onAnswered?.(choice);
           return;
         }
         start(async () => {
@@ -58,6 +62,7 @@ export function Rsvp({
           if (res.ok) {
             setSaved(choice);
             setEditing(false);
+            onAnswered?.(choice);
           } else setError(t.error);
         });
       }}
@@ -73,7 +78,7 @@ export function Rsvp({
               borderRadius: "var(--radius)",
               borderColor: "var(--primary)",
               background: choice === v ? "var(--primary)" : "transparent",
-              color: choice === v ? "#fff" : "var(--text)",
+              color: choice === v ? "var(--on-primary, #fff)" : "var(--text)",
             }}
           >
             {v === "yes" ? t.attend : t.decline}

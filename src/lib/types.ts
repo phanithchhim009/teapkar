@@ -20,7 +20,7 @@ export const videoSchema = z.object({
 });
 export type Video = z.infer<typeof videoSchema>;
 
-export const THEMES = ["classic", "royal", "party", "angkor", "bloom", "lotus", "garden"] as const;
+export const THEMES = ["classic", "royal", "party", "gala", "angkor", "bloom", "lotus", "garden"] as const;
 export type Theme = (typeof THEMES)[number];
 
 // Keep in sync with the event.type check (supabase/migrations/0004_multi_event.sql).
@@ -37,6 +37,8 @@ export const THEME_PRESETS: Record<Theme, ThemePreset> = {
   royal: { primaryColor: "#8b1a1e", textColor: "#4a2a17", guestNameColor: "#a0722a", fontEn: "Great Vibes", fontKh: "Moul", fontBodyKh: "Battambang" },
   // Birthdays: raspberry and plum on pink-lavender, with confetti and balloons. Koulen is bold and playful for titles.
   party: { primaryColor: "#c2185b", textColor: "#4a2545", guestNameColor: "#6a1b9a", fontEn: "Pacifico", fontKh: "Koulen", fontBodyKh: "Battambang" },
+  // Evening dinner party: night sky, gold lettering, fireworks. Light text because the background is dark.
+  gala: { primaryColor: "#e8c26a", textColor: "#f1e6d2", guestNameColor: "#ffd98a", fontEn: "Great Vibes", fontKh: "Moul", fontBodyKh: "Battambang" },
   // Aged gilding, carved sandstone shadow and laterite brown, as at Angkor Wat at sunrise.
   angkor: { primaryColor: "#b7862f", textColor: "#6b4a2b", guestNameColor: "#4a2c17", fontEn: "Cormorant Garamond" },
   // Watercolor florals with gold lettering and a deep leaf green.
